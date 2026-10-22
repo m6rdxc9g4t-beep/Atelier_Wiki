@@ -1,6 +1,6 @@
 // En-tête : sélecteur de la suite, marque « atelier_Wiki », recherche (⌘K), thème, auteur connecté.
 
-import { BookOpenText, CalendarCheck, ChartColumn, Check, LayoutGrid, Menu, Monitor, Moon, Search, Sun, Table2, Workflow } from 'lucide-react'
+import { BookOpenText, CalendarCheck, ChartColumn, Check, ClipboardList, LayoutGrid, Menu, Monitor, Moon, Search, Sun, Table2, Workflow } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { checkHealth, CURRENT_APP, PORTAL_URL, SUITE_APPS, type SuiteAppId } from '../lib/suite.ts'
@@ -14,6 +14,7 @@ const ICONS: Record<SuiteAppId, ReactNode> = {
   tab: <Table2 />,
   projets: <CalendarCheck />,
   wiki: <BookOpenText />,
+  formulaire: <ClipboardList />,
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)

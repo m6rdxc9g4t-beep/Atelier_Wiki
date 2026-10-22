@@ -1,7 +1,7 @@
 // Suite Atelier (docs/SUITE.md §3 d'Atelier Projets) : applications du sélecteur et leur état « en marche / arrêtée ».
 // Adresses surchargeables à la compilation (VITE_ATELIER_*_URL) : sur le VPS, ce sont les sous-domaines de la suite.
 
-export type SuiteAppId = 'nexus' | 'viz' | 'tab' | 'projets' | 'wiki'
+export type SuiteAppId = 'nexus' | 'viz' | 'tab' | 'projets' | 'wiki' | 'formulaire'
 
 export interface SuiteApp {
   id: SuiteAppId
@@ -23,6 +23,7 @@ const VIZ = urlFrom('VITE_ATELIER_VIZ_URL', 'http://127.0.0.1:8000')
 const TAB = urlFrom('VITE_ATELIER_TAB_URL', 'http://127.0.0.1:4175')
 const PROJETS = urlFrom('VITE_ATELIER_PROJETS_URL', 'http://127.0.0.1:4174')
 const WIKI = urlFrom('VITE_ATELIER_WIKI_URL', '')
+const FORMULAIRE = urlFrom('VITE_ATELIER_FORMULAIRE_URL', 'http://127.0.0.1:3300')
 /** Portail de la suite (VPS) : vide en local. */
 export const PORTAL_URL = urlFrom('VITE_ATELIER_PORTAL_URL', '')
 
@@ -32,6 +33,7 @@ export const SUITE_APPS: readonly SuiteApp[] = [
   { id: 'tab', name: 'Atelier Tab', short: 'Tab', description: 'Tableur et base typée', url: TAB, healthUrl: `${TAB}/api/health` },
   { id: 'projets', name: 'Atelier Projets', short: 'Projets', description: 'Projets agiles, jalons, temps passé', url: PROJETS, healthUrl: `${PROJETS}/api/health` },
   { id: 'wiki', name: 'Atelier Wiki', short: 'Wiki', description: 'Pages, procédures et notes de la suite', url: WIKI || '/', healthUrl: null },
+  { id: 'formulaire', name: 'Atelier Formulaire', short: 'Formulaire', description: 'Questionnaires et réponses', url: FORMULAIRE, healthUrl: `${FORMULAIRE}/api/health` },
 ]
 
 /** « En marche » si la route de santé répond (réponse opaque acceptée : mode no-cors). */

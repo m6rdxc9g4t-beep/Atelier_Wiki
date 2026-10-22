@@ -1,0 +1,12 @@
+/* Couleur signature d'Atelier Wiki : bleu ciel.
+   atelier-brand.css reste une copie à l'octet près de la source (Atelier_Projets/design-system/brand/) ;
+   la signature du Wiki est donc déclarée ici, sur le même modèle que celles des autres apps.
+   À reporter dans la source commune (--atelier-sig-wiki) lors de sa prochaine mise à jour. */
+:root {
+  --atelier-sig-wiki: #4dabf7;
+}
+
+[data-atelier-app="wiki"] {
+  --atelier-signature: var(--atelier-sig-wiki);
+  --atelier-signature-contrast: #0b0b0f;
+}

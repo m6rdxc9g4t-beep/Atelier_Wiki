@@ -73,7 +73,7 @@ Charte « néon monochrome » de la suite, couleur signature **bleu ciel `#4DABF
 
 `POST /api/ai/draft` ne crée ni ne modifie aucune page : il renvoie un brouillon. Consignes : 4 000 caractères au plus ; texte actuel (`current`, exigé en mode `rewrite`) : 50 000. Erreurs `{ detail, code }` : `AI_UNAVAILABLE` (503, Ollama injoignable), `AI_MODEL_MISSING` (503, modèle non installé), `AI_TIMEOUT` (504, délai `OLLAMA_TIMEOUT_MS` dépassé), `AI_INVALID_OUTPUT` (502, réponse inexploitable), `VALIDATION` (422). Si le navigateur abandonne (bouton « Annuler »), la génération s’arrête aussi côté Ollama.
 
-Le prompt système ne contient que des consignes ; le titre et le texte de la page partent dans des blocs `<donnees>…</donnees>` (balises imitées neutralisées), traités comme des données, jamais comme des consignes. Sur le VPS, le délai du proxy (Caddy) doit rester supérieur à `OLLAMA_TIMEOUT_MS`.
+Le prompt système ne contient que des consignes ; le titre et le texte de la page partent dans des blocs `<donnees>…</donnees>` (balises imitées neutralisées), traités comme des données, jamais comme des consignes. Ollama est joint par `node:http` et non par le `fetch` de Node, qui abandonne après 300 s sans en-têtes de réponse : seul `OLLAMA_TIMEOUT_MS` borne une génération (par exemple `600000` sur un serveur sans GPU). Sur le VPS, le délai du proxy (Caddy) doit rester supérieur à `OLLAMA_TIMEOUT_MS`.
 
 ## Nœud Atelier (contrat `atelier-node/1`)
 

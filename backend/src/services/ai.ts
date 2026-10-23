@@ -5,6 +5,7 @@
 import type { OllamaConfig } from '../config.js'
 import { cleanMarkdown, draftMessages, MAX_CURRENT, MAX_INSTRUCTIONS, MAX_TITLE, type ChatMessage, type DraftInput } from '../domain/ai-prompts.js'
 import { ApiError, invalid } from '../http/errors.js'
+import { nodeHttpFetch } from './http-transport.js'
 
 /** `fetch` injectable (tests : faux Ollama, aucun appel réseau réel). */
 export type FetchFn = (input: string, init?: RequestInit) => Promise<Response>
@@ -63,7 +64,8 @@ export class OllamaClient {
 
   constructor(
     readonly config: OllamaConfig,
-    fetchFn: FetchFn = (input, init) => globalThis.fetch(input, init),
+    // Pas le `fetch` global : il abandonne après 300 s sans en-têtes (voir http-transport.ts).
+    fetchFn: FetchFn = nodeHttpFetch,
   ) {
     this.fetch = fetchFn
   }

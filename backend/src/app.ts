@@ -9,9 +9,11 @@ import type { WikiConfig } from './config.js'
 import { openDatabase, type Db } from './db/database.js'
 import { ApiError } from './http/errors.js'
 import { isAllowedHost, isAllowedOrigin, isWrite, requestUser } from './http/guards.js'
+import { aiRoutes } from './routes/ai.js'
 import { atelierRoutes } from './routes/atelier.js'
 import { attachmentRoutes } from './routes/attachments.js'
 import { wikiRoutes } from './routes/wiki.js'
+import { OllamaClient, type FetchFn } from './services/ai.js'
 import { pruneEvents } from './services/events.js'
 import { pruneIdempotency } from './services/idempotency.js'
 import { purgeExpiredTrash } from './services/pages.js'
@@ -21,6 +23,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     db: Db
     config: WikiConfig
+    /** Client de l'IA locale (Ollama) pour la rédaction assistée. */
+    ai: OllamaClient
   }
   interface FastifyRequest {
     /** Auteur de la requête (portail de la suite, sinon auteur par défaut). */
@@ -49,9 +53,11 @@ export interface BuildOptions {
   db?: Db
   seed?: boolean
   logger?: boolean
+  /** `fetch` utilisé pour joindre Ollama (tests : faux Ollama). */
+  aiFetch?: FetchFn
 }
 
-export async function buildApp({ config, db, seed = true, logger = false }: BuildOptions): Promise<FastifyInstance> {
+export async function buildApp({ config, db, seed = true, logger = false, aiFetch }: BuildOptions): Promise<FastifyInstance> {
   const app = Fastify({
     logger: logger ? { level: config.logLevel } : false,
     bodyLimit: 5 * 1024 * 1024,
@@ -62,6 +68,7 @@ export async function buildApp({ config, db, seed = true, logger = false }: Buil
   const database = db ?? openDatabase(join(config.dataDir, 'wiki.db'))
   app.decorate('db', database)
   app.decorate('config', config)
+  app.decorate('ai', new OllamaClient(config.ollama, aiFetch))
   app.decorateRequest('user', '')
   if (seed) seedIfEmpty(database)
 
@@ -102,6 +109,7 @@ export async function buildApp({ config, db, seed = true, logger = false }: Buil
   await app.register(wikiRoutes)
   await app.register(attachmentRoutes)
   await app.register(atelierRoutes)
+  await app.register(aiRoutes)
 
   if (config.staticDir) {
     const staticDir = config.staticDir

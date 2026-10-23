@@ -9,6 +9,7 @@ Le wiki de la Suite Atelier : procédures, notes techniques, décisions et compt
 - **Recherche plein texte** (`⌘ K` ou `/`) dans les titres et le texte, accents ignorés.
 - **Images et fichiers** : coller (`⌘ V`) ou glisser dans l'éditeur.
 - **Corbeille** de 30 jours, sous-pages comprises.
+- **Rédiger avec l’IA** : dans l’éditeur, l’IA locale (Ollama, sur le serveur de la suite) rédige une page à partir de tes consignes ou retravaille le texte actuel (compléter, reformuler, structurer, résumer). Tu relis l’aperçu, puis tu remplaces le texte ou l’ajoutes à la fin : rien n’est enregistré tant que tu n’as pas cliqué sur « Enregistrer ».
 - **Écritures concurrentes protégées** : si quelqu'un a enregistré la page pendant que tu l'écrivais, le Wiki le signale au lieu d'écraser son travail. Le brouillon en cours reste sur l'appareil jusqu'à l'enregistrement.
 - **Nœud Atelier** (`atelier-node/1`) : Atelier Nexus peut chercher, lire, créer et compléter des pages dans ses workflows.
 
@@ -40,6 +41,9 @@ Les données vont dans `backend/data/` (`wiki.db` + `uploads/`). Au premier dém
 | `WIKI_MAX_UPLOAD_MB` | `20` | Taille maximale d'une pièce jointe |
 | `WIKI_TRASH_DAYS` | `30` | Durée de la corbeille |
 | `WIKI_DEFAULT_USER` | `moi` | Auteur affiché sans portail (en local) |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Serveur Ollama de la rédaction assistée |
+| `OLLAMA_MODEL` | `llama3.1:8b` | Modèle utilisé (à installer : `ollama pull llama3.1:8b`) |
+| `OLLAMA_TIMEOUT_MS` | `300000` | Délai maximal d’une rédaction (sans GPU, plusieurs minutes) |
 
 Adresses de la suite compilées dans l'interface (sélecteur « Suite Atelier ») : `VITE_ATELIER_NEXUS_URL`, `VITE_ATELIER_VIZ_URL`, `VITE_ATELIER_TAB_URL`, `VITE_ATELIER_PROJETS_URL`, `VITE_ATELIER_PORTAL_URL`.
 
@@ -51,14 +55,25 @@ Le Wiki tourne derrière le portail de la suite : Caddy vérifie la session (`fo
 
 ```
 backend/   Fastify + TypeScript + SQLite (better-sqlite3, recherche FTS5)
-  src/domain/     règles pures (liens [[…]], extraits)
-  src/services/   espaces, pages, historique, recherche, pièces jointes, événements, idempotence, nœud Atelier
-  src/routes/     routes minces : wiki.ts (interface), attachments.ts, atelier.ts (Nexus)
+  src/domain/     règles pures (liens [[…]], extraits, prompts de l’IA)
+  src/services/   espaces, pages, historique, recherche, pièces jointes, événements, idempotence, nœud Atelier, IA (Ollama)
+  src/routes/     routes minces : wiki.ts (interface), attachments.ts, atelier.ts (Nexus), ai.ts (rédaction assistée)
 frontend/  React + TypeScript + Vite, sans framework CSS
   src/styles/     copies verbatim du design system d'Atelier Projets + wiki.css
 ```
 
 Charte « néon monochrome » de la suite, couleur signature **bleu ciel `#4DABF7`** (`frontend/src/styles/wiki-signature.css`). Le texte des pages est composé dans une serif système pour la lecture longue ; l'interface garde la pile sans empattement de la suite. Aucune police téléchargée.
+
+## Rédaction assistée (Ollama)
+
+| Route | Rôle |
+|---|---|
+| `GET /api/ai/status` | `{ available, model, modelInstalled }` (sonde `/api/tags` d’Ollama, 3 s au plus, jamais d’erreur) |
+| `POST /api/ai/draft` | `{ instructions, title?, current?, mode: "create" \| "rewrite" }` → `{ markdown, model }` |
+
+`POST /api/ai/draft` ne crée ni ne modifie aucune page : il renvoie un brouillon. Consignes : 4 000 caractères au plus ; texte actuel (`current`, exigé en mode `rewrite`) : 50 000. Erreurs `{ detail, code }` : `AI_UNAVAILABLE` (503, Ollama injoignable), `AI_MODEL_MISSING` (503, modèle non installé), `AI_TIMEOUT` (504, délai `OLLAMA_TIMEOUT_MS` dépassé), `AI_INVALID_OUTPUT` (502, réponse inexploitable), `VALIDATION` (422). Si le navigateur abandonne (bouton « Annuler »), la génération s’arrête aussi côté Ollama.
+
+Le prompt système ne contient que des consignes ; le titre et le texte de la page partent dans des blocs `<donnees>…</donnees>` (balises imitées neutralisées), traités comme des données, jamais comme des consignes. Sur le VPS, le délai du proxy (Caddy) doit rester supérieur à `OLLAMA_TIMEOUT_MS`.
 
 ## Nœud Atelier (contrat `atelier-node/1`)
 

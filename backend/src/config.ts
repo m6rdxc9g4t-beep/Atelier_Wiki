@@ -26,7 +26,18 @@ export interface WikiConfig {
   trashDays: number
   /** Adresse publique du Wiki (`https://wiki.atelier.mondomaine.fr`) : liens complets donnés à Nexus. */
   publicUrl: string | null
+  /** IA de rédaction : serveur Ollama (même hôte par défaut), modèle et délai maximal d'une génération. */
+  ollama: OllamaConfig
   logLevel: string
+}
+
+export interface OllamaConfig {
+  /** Adresse du serveur Ollama, sans « / » final (`OLLAMA_URL`). */
+  url: string
+  /** Modèle utilisé pour rédiger (`OLLAMA_MODEL`). */
+  model: string
+  /** Délai maximal d'une génération, en millisecondes (`OLLAMA_TIMEOUT_MS`) : sans GPU, plusieurs minutes. */
+  timeoutMs: number
 }
 
 function list(value: string | undefined): string[] {
@@ -57,6 +68,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WikiConfig {
     defaultUser: (env.WIKI_DEFAULT_USER || 'moi').trim(),
     trashDays: positiveNumber(env.WIKI_TRASH_DAYS, 30),
     publicUrl: env.WIKI_PUBLIC_URL?.trim().replace(/\/+$/, '') || null,
+    ollama: {
+      url: env.OLLAMA_URL?.trim().replace(/\/+$/, '') || 'http://127.0.0.1:11434',
+      model: env.OLLAMA_MODEL?.trim() || 'llama3.1:8b',
+      timeoutMs: positiveNumber(env.OLLAMA_TIMEOUT_MS, 300_000),
+    },
     logLevel: env.LOG_LEVEL || 'info',
   }
 }

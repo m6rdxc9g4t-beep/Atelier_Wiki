@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { buildApp } from '../src/app.js'
 import { loadConfig, type WikiConfig } from '../src/config.js'
 import { openDatabase } from '../src/db/database.js'
+import type { FetchFn } from '../src/services/ai.js'
 
 export function testConfig(overrides: Partial<WikiConfig> = {}): WikiConfig {
   return {
@@ -18,9 +19,13 @@ export function testConfig(overrides: Partial<WikiConfig> = {}): WikiConfig {
   }
 }
 
-export async function testApp(options: { seed?: boolean; config?: Partial<WikiConfig> } = {}) {
+/** Application de test. Sans `aiFetch`, tout appel à Ollama échoue (aucun réseau réel). */
+export async function testApp(options: { seed?: boolean; config?: Partial<WikiConfig>; aiFetch?: FetchFn } = {}) {
   const db = openDatabase(':memory:')
-  const app = await buildApp({ config: testConfig(options.config), db, seed: options.seed ?? false })
+  const noNetwork: FetchFn = async () => {
+    throw new TypeError('réseau coupé dans les tests')
+  }
+  const app = await buildApp({ config: testConfig(options.config), db, seed: options.seed ?? false, aiFetch: options.aiFetch ?? noNetwork })
   return { app, db }
 }
 

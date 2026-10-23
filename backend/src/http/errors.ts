@@ -13,6 +13,12 @@ export type ErrorCode =
   | 'PAYLOAD_TOO_LARGE'
   | 'UNSUPPORTED_FILE'
   | 'INTERNAL'
+  // IA de rédaction (services/ai.ts)
+  | 'AI_UNAVAILABLE'
+  | 'AI_TIMEOUT'
+  | 'AI_MODEL_MISSING'
+  | 'AI_INVALID_OUTPUT'
+  | 'AI_CANCELLED'
 
 export class ApiError extends Error {
   constructor(

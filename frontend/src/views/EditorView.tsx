@@ -19,9 +19,11 @@ import {
   FileText,
   PenLine,
   BookMarked,
+  Sparkles,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 
+import { AiDraftDialog } from '../components/AiDraftDialog.tsx'
 import { Markdown } from '../components/Markdown.tsx'
 import { ErrorNotice, Skeleton, useUi } from '../components/ui.tsx'
 import { useWiki } from '../components/WikiContext.tsx'
@@ -112,6 +114,7 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
   const [conflict, setConflict] = useState<PageDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const [found, setFound] = useState<Draft | null>(() => {
     const d = readDraft(pageId)
     if (!d) return null
@@ -316,6 +319,8 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
   // Raccourcis de la page : ⌘S / ⌘Entrée enregistrent, Échap annule.
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
+      // Une fenêtre ouverte (IA, confirmation…) garde ses propres raccourcis.
+      if (document.querySelector('dialog[open]')) return
       const mod = e.metaKey || e.ctrlKey
       if (mod && (e.key.toLowerCase() === 's' || e.key === 'Enter')) {
         e.preventDefault()
@@ -502,6 +507,15 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
             e.target.value = ''
           }}
         />
+        <span className="sep" />
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm ai-trigger"
+          onClick={() => setAiOpen(true)}
+          title="Rédiger ou retravailler le texte avec l’IA locale (rien n’est enregistré sans toi)"
+        >
+          <Sparkles aria-hidden /> Rédiger avec l’IA
+        </button>
         <span className="push" />
         <div className="segmented" role="group" aria-label="Affichage">
           <button type="button" aria-pressed={mode === 'write'} onClick={() => setModePersist('write')} title="Texte seul">
@@ -584,6 +598,20 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
           {content.trim() ? <Markdown content={content} spaceId={spaceId} preview /> : <p className="muted">L’aperçu apparaît ici.</p>}
         </div>
       </div>
+
+      {aiOpen && (
+        <AiDraftDialog
+          title={title}
+          current={content}
+          spaceId={spaceId}
+          onApply={(next) => {
+            setContent(next)
+            toast('Texte de l’IA ajouté à l’éditeur : relis-le, puis enregistre.')
+            requestAnimationFrame(() => area.current?.focus())
+          }}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
 
       {page && (
         <div className="editor__summary">

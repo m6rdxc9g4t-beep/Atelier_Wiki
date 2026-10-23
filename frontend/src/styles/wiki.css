@@ -1497,6 +1497,132 @@ dialog.dialog::backdrop {
   margin-bottom: 0.7rem;
 }
 
+/* ── Rédaction assistée (IA locale) ──────────────────────────────────────── */
+.ai-trigger {
+  color: var(--accent-ink);
+}
+.ai-trigger:hover {
+  background: var(--accent-faint);
+}
+dialog.ai-dialog {
+  width: min(720px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+dialog.ai-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.ai-dialog .dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.ai-dialog__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ai-dialog__title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-ink);
+}
+.ai-dialog__notice {
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+.ai-dialog__notice-text {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.ai-dialog__hint {
+  margin: 0.4rem 0 0;
+  font-size: 12.5px;
+  color: var(--app-muted);
+}
+.ai-dialog__modes {
+  margin: 0.9rem 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.ai-dialog__modes legend {
+  padding: 0;
+}
+.ai-dialog__mode {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--ds-radius-md);
+  cursor: pointer;
+}
+.ai-dialog__mode + .ai-dialog__mode {
+  margin-top: 0.45rem;
+}
+.ai-dialog__mode:hover {
+  background: var(--surface-hover);
+}
+.ai-dialog__mode:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ai-dialog__mode input {
+  margin: 0.2rem 0 0;
+  accent-color: var(--accent);
+}
+.ai-dialog__mode > span {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 14px;
+}
+.ai-dialog__mode .muted {
+  font-size: 13px;
+}
+.ai-dialog__wait {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 1.4rem 0.2rem 1rem;
+}
+.ai-dialog__wait > div {
+  display: grid;
+  gap: 0.25rem;
+}
+.ai-dialog__wait .muted {
+  font-size: 13px;
+}
+.ai-dialog__spinner {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  color: var(--accent-ink);
+  animation: ai-spin 1.1s linear infinite;
+}
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ai-dialog__preview {
+  max-height: min(48vh, 520px);
+  overflow-y: auto;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--app-line);
+  border-radius: var(--ds-radius-md);
+  background: var(--app-bg);
+  font-size: 1rem;
+}
+.ai-dialog__actions {
+  flex-wrap: wrap;
+  border-top: 1px solid var(--app-line);
+  padding-top: 0.9rem;
+}
+.ai-dialog__again {
+  margin-right: auto;
+}
+
 /* ── Écrans étroits ──────────────────────────────────────────────────────── */
 @media (max-width: 1180px) {
   .page-grid {
@@ -1520,6 +1646,12 @@ dialog.dialog::backdrop {
   }
   .editor__panes[data-mode="split"] .editor__preview {
     display: none;
+  }
+}
+@media (max-width: 560px) {
+  .ai-dialog__actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 @media (max-width: 860px) {

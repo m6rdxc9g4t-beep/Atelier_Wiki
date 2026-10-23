@@ -110,6 +110,27 @@ export interface Home {
   recent: (PageSummary & { excerpt: string; spaceName: string })[]
 }
 
+/** État de l'IA locale (Ollama) pour la rédaction assistée. */
+export interface AiStatus {
+  available: boolean
+  model: string
+  modelInstalled: boolean
+}
+
+export type AiDraftMode = 'create' | 'rewrite'
+
+export interface AiDraftInput {
+  instructions: string
+  title?: string
+  current?: string
+  mode: AiDraftMode
+}
+
+export interface AiDraft {
+  markdown: string
+  model: string
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -121,7 +142,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+/** Erreur levée quand l'appelant a annulé la requête (AbortController) : jamais affichée. */
+export const isAbort = (error: unknown) => error instanceof DOMException && error.name === 'AbortError'
+
+async function request<T>(method: string, url: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let response: Response
   try {
     response = await fetch(url, {
@@ -129,8 +153,10 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
       headers: body !== undefined && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : undefined,
       body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
       credentials: 'same-origin',
+      signal,
     })
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw isAbort(error) ? error : new DOMException('Requête annulée.', 'AbortError')
     throw new ApiError(0, 'NETWORK', 'Le Wiki ne répond pas. Vérifie ta connexion, puis réessaie.')
   }
   if (response.status === 204) return undefined as T
@@ -181,6 +207,10 @@ export const api = {
   trash: () => request<{ days: number; entries: TrashEntry[] }>('GET', '/api/trash'),
   restoreTrash: (id: number) => request<PageDetail>('POST', `/api/trash/${id}/restore`),
   purgeTrash: (id: number) => request<{ deleted: number }>('DELETE', `/api/trash/${id}`),
+
+  aiStatus: () => request<AiStatus>('GET', '/api/ai/status'),
+  /** Brouillon rédigé par l'IA : n'enregistre rien (l'éditeur enregistre ensuite par le circuit normal). */
+  aiDraft: (input: AiDraftInput, signal?: AbortSignal) => request<AiDraft>('POST', '/api/ai/draft', input, signal),
 
   upload: (file: File, pageId: number | null) => {
     const form = new FormData()

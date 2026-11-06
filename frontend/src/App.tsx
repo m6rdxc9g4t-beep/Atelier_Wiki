@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { CommandPalette } from './components/CommandPalette.tsx'
-import { Header } from './components/Header.tsx'
+import { AboutDialog, Topbar } from './components/Header.tsx'
 import { Sidebar } from './components/Sidebar.tsx'
 import { UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
@@ -36,10 +36,34 @@ function View({ route }: { route: Route }) {
   }
 }
 
+/** Titre de la barre haute : la vue ouverte (le titre de la page reste dans le contenu). */
+function viewTitle(route: Route, spaceName: string | undefined, spaces: { slug: string; name: string }[]): string {
+  switch (route.name) {
+    case 'home':
+      return 'Accueil'
+    case 'space':
+      return spaces.find((s) => s.slug === route.slug)?.name ?? 'Espace'
+    case 'page':
+      return spaceName ?? 'Page'
+    case 'edit':
+      return 'Modifier la page'
+    case 'history':
+      return 'Historique'
+    case 'new':
+      return 'Nouvelle page'
+    case 'search':
+      return 'Recherche'
+    case 'trash':
+      return 'Corbeille'
+    default:
+      return 'Page introuvable'
+  }
+}
+
 function Shell() {
   const route = useRoute()
   const { key } = useLocation()
-  const { currentSpace } = useWiki()
+  const { currentSpace, spaces } = useWiki()
   const [navOpen, setNavOpen] = useState(false)
 
   // Menu (écran étroit) refermé à chaque changement d'adresse.
@@ -63,16 +87,17 @@ function Shell() {
       <a className="sr-only" href="#contenu">
         Aller au contenu
       </a>
-      <Header navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} />
-      <div className="layout">
-        <aside className="sidebar" aria-label="Pages du wiki">
-          <Sidebar route={route} onNavigate={() => setNavOpen(false)} />
-        </aside>
-        <div className="sidebar-backdrop" onClick={() => setNavOpen(false)} />
+      <aside className="sidebar" aria-label="Pages du wiki">
+        <Sidebar route={route} onNavigate={() => setNavOpen(false)} />
+      </aside>
+      <div className="sidebar-backdrop" onClick={() => setNavOpen(false)} />
+      <div className="main-col">
+        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} />
         <main className="main" id="contenu">
           <View route={route} />
         </main>
       </div>
+      <AboutDialog />
     </div>
   )
 }

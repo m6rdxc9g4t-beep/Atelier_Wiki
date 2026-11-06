@@ -11,7 +11,7 @@ Consulte `README.md` pour les fonctions et les réglages. Le contrat commun de l
 - `PUT /api/pages/:id` exige `baseVersion` (verrou optimiste) : 409 `CONFLICT` avec la version actuelle si elle a changé.
 - Nœud Atelier : actions déclarées **une seule fois** dans `services/atelier-manifest.ts` (schémas réutilisés par les routes), logique dans `services/atelier-node.ts`, idempotence par `runIdempotent`. Les événements ne contiennent jamais le texte des pages.
 - Sécurité : gardes Host / Origin dans `http/guards.ts` (ne pas assouplir) ; pas de HTML brut dans le rendu Markdown ; pièces jointes servies avec un type fixé par le serveur, `nosniff` et une CSP `sandbox` (sauf PDF).
-- `frontend/` : React + Vite, CSS natif. `src/styles/atelier-ds/*` et `src/styles/atelier-brand/*` sont des **copies verbatim** d'Atelier Projets : ne pas les modifier ici. La signature du Wiki est dans `wiki-signature.css`, l'interface dans `wiki.css` (aucune couleur littérale : uniquement les jetons `--app-*`, `--accent*`, `--status-*`).
+- `frontend/` : React + Vite, CSS natif. `src/styles/atelier-ds/*`, `src/styles/atelier-brand/*` et `public/atelier-theme.js` sont des **copies verbatim** d'Atelier Projets (`design-system/`, charte v2) : ne pas les modifier ici. La signature du Wiki (`#007cbb`, icône `book-open`) est activée dans `wiki-signature.css`, l'interface dans `wiki.css` (aucune couleur littérale : uniquement les jetons `--app-*`, `--accent*`, `--atelier-*`, `--status-*` ; vérifié par `src/lib/design.test.ts`). Règles de la charte : `Atelier_Deploy/DESIGN.md`.
 - Les règles de liens `[[…]]` existent côté backend (`domain/markdown.ts`) et frontend (`lib/markdown.ts`) : les garder identiques.
 
 ## Méthode

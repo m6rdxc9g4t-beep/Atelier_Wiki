@@ -1,6 +1,6 @@
 // Accueil, espace, résultats de recherche, corbeille.
 
-import { FilePlus2, FileText, Pin, RotateCcw, Search, Trash2 } from 'lucide-react'
+import { FilePlus2, FileText, Folder, Pin, RotateCcw, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Highlight } from '../components/CommandPalette.tsx'
@@ -99,7 +99,7 @@ export function HomeView() {
                 <li key={s.id}>
                   <a className="space-tile" href={`/espace/${s.slug}`} onClick={(e) => onLinkClick(e, `/espace/${s.slug}`)}>
                     <span className="space-picker__icon" aria-hidden>
-                      {s.icon || '📁'}
+                      {s.icon || <Folder />}
                     </span>
                     <span className="space-tile__body">
                       <span className="space-tile__name">{s.name}</span>
@@ -144,7 +144,7 @@ export function SpaceView({ slug }: { slug: string }) {
         <div className="page-head__text">
           <h1 className="page-title">
             <span className="page-title__icon" aria-hidden>
-              {space.icon || '📁'}
+              {space.icon || <Folder />}
             </span>
             <span>{space.name}</span>
           </h1>

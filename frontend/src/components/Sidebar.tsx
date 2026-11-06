@@ -1,12 +1,13 @@
 // Barre latérale : choix de l'espace, arbre des pages (glisser-déposer pour ranger), accueil et corbeille.
 
-import { Check, ChevronDown, ChevronRight, FileText, FolderPlus, Home, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronsUpDown, ChevronRight, FileText, Folder, FolderPlus, House, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 
 import { api, pagePath, type PageSummary } from '../lib/api.ts'
 import { invalidate, invalidateAll, useAsync, useTopic } from '../lib/data.ts'
 import { plural } from '../lib/format.ts'
 import { navigate, onLinkClick, type Route } from '../lib/router.ts'
+import { Brand, SearchTrigger, SuiteSwitcher, ThemeSwitch, UserChip } from './Header.tsx'
 import { useDismiss, useUi } from './ui.tsx'
 import { useWiki } from './WikiContext.tsx'
 
@@ -77,6 +78,26 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate: () =>
 
   return (
     <>
+      <div className="side-head">
+        <SuiteSwitcher />
+        <Brand />
+      </div>
+      <div className="side-search">
+        <SearchTrigger />
+      </div>
+      <nav className="side-nav" aria-label="Navigation">
+        <a className="nav-link" href="/" aria-current={route.name === 'home' ? 'page' : undefined} onClick={(e) => (onLinkClick(e, '/'), onNavigate())}>
+          <House aria-hidden /> Accueil
+        </a>
+        <a
+          className="nav-link"
+          href="/corbeille"
+          aria-current={route.name === 'trash' ? 'page' : undefined}
+          onClick={(e) => (onLinkClick(e, '/corbeille'), onNavigate())}
+        >
+          <Trash2 aria-hidden /> Corbeille
+        </a>
+      </nav>
       <div className="sidebar__scroll">
         <SpacePicker />
         <div className="tree-head">
@@ -97,13 +118,9 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate: () =>
           )}
         </div>
         {tree.error ? (
-          <p className="muted" style={{ padding: '0 0.6rem', fontSize: 13 }}>
-            {tree.error.message}
-          </p>
+          <p className="side-note">{tree.error.message}</p>
         ) : pages.length === 0 && !tree.loading ? (
-          <p className="muted" style={{ padding: '0 0.6rem', fontSize: 13 }}>
-            Cet espace est vide. Crée sa première page avec le bouton +.
-          </p>
+          <p className="side-note">Cet espace est vide. Crée sa première page avec le bouton +.</p>
         ) : (
           <TreeLevel
             parentId={null}
@@ -118,19 +135,10 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate: () =>
           />
         )}
       </div>
-      <nav className="sidebar__foot" aria-label="Navigation">
-        <a className="nav-link" href="/" aria-current={route.name === 'home' ? 'page' : undefined} onClick={(e) => (onLinkClick(e, '/'), onNavigate())}>
-          <Home aria-hidden /> Accueil
-        </a>
-        <a
-          className="nav-link"
-          href="/corbeille"
-          aria-current={route.name === 'trash' ? 'page' : undefined}
-          onClick={(e) => (onLinkClick(e, '/corbeille'), onNavigate())}
-        >
-          <Trash2 aria-hidden /> Corbeille
-        </a>
-      </nav>
+      <div className="sidebar__foot">
+        <UserChip />
+        <ThemeSwitch />
+      </div>
     </>
   )
 }
@@ -200,13 +208,11 @@ function SpacePicker() {
     <div className="space-picker" ref={root}>
       <button ref={trigger} type="button" className="space-picker__button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <span className="space-picker__icon" aria-hidden>
-          {currentSpace?.icon || '📁'}
+          {currentSpace?.icon || <Folder />}
         </span>
-        <span className="space-picker__name">
-          {currentSpace?.name ?? 'Chargement…'}
-          {currentSpace && <span className="space-picker__meta">{plural(currentSpace.pageCount, 'page', 'pages')}</span>}
-        </span>
-        <ChevronDown aria-hidden width={16} height={16} />
+        <span className="space-picker__name">{currentSpace?.name ?? 'Chargement…'}</span>
+        {currentSpace && <span className="space-picker__meta">{plural(currentSpace.pageCount, 'page', 'pages')}</span>}
+        <ChevronsUpDown aria-hidden className="space-picker__chevron" />
       </button>
       {open && (
         <div role="menu" className="popover" style={{ top: 'calc(100% + 6px)', left: 0, right: 0 }}>
@@ -224,8 +230,8 @@ function SpacePicker() {
                 close(false)
               }}
             >
-              <span aria-hidden style={{ width: 18, textAlign: 'center' }}>
-                {s.icon || '📁'}
+              <span className="menu-item__emoji" aria-hidden>
+                {s.icon || <Folder />}
               </span>
               <span className="menu-item__body">
                 <span className="menu-item__text">{s.name}</span>

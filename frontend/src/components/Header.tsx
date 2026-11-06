@@ -1,99 +1,78 @@
-// En-tête : sélecteur de la suite, marque « atelier_Wiki », recherche (⌘K), thème, auteur connecté.
+// Coquille (charte v2 « Linear ») : marque « Atelier Wiki » et fenêtre « À propos », sélecteur de la suite,
+// recherche (⌘K), choix du thème (préférence commune à la suite), auteur connecté, barre haute de la vue.
 
-import { BookOpenText, CalendarCheck, ChartColumn, Check, ClipboardList, LayoutGrid, Menu, Monitor, Moon, Search, Sun, Table2, Workflow } from 'lucide-react'
+import { Check, LayoutGrid, Menu, Monitor, Moon, Search, Sun } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { checkHealth, CURRENT_APP, PORTAL_URL, SUITE_APPS, type SuiteAppId } from '../lib/suite.ts'
 import { useTheme, type ThemePreference } from '../lib/theme.ts'
+import { AppGlyph } from './AppGlyph.tsx'
 import { useDismiss } from './ui.tsx'
 import { useWiki } from './WikiContext.tsx'
-
-const ICONS: Record<SuiteAppId, ReactNode> = {
-  nexus: <Workflow />,
-  viz: <ChartColumn />,
-  tab: <Table2 />,
-  projets: <CalendarCheck />,
-  wiki: <BookOpenText />,
-  formulaire: <ClipboardList />,
-}
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 export const MOD_KEY = isMac ? '⌘' : 'Ctrl'
 
-export function Header({ onToggleNav, navOpen }: { onToggleNav: () => void; navOpen: boolean }) {
-  const { openPalette, user } = useWiki()
+const ABOUT_ID = 'atelier-about'
+
+// ── Marque et « À propos » ──────────────────────────────────────────────────
+
+export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <header className="topbar">
-      <button
-        type="button"
-        className="btn btn--ghost btn--icon topbar__menu"
-        aria-label={navOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-        aria-expanded={navOpen}
-        onClick={onToggleNav}
-      >
-        <Menu />
-      </button>
-      <SuiteSwitcher />
-      <Brand />
-      <button type="button" className="search-trigger" onClick={() => openPalette()} aria-label="Rechercher dans le wiki" aria-keyshortcuts="Meta+K Control+K /">
-        <Search aria-hidden />
-        <span>Rechercher…</span>
-        <kbd>{MOD_KEY} K</kbd>
-      </button>
-      <div className="topbar__spacer" />
-      <ThemeMenu />
-      {user && (
-        <span className="user-chip" title={`Connecté : ${user}`}>
-          <span className="avatar" aria-hidden>
-            {user.slice(0, 1)}
-          </span>
-          <span className="user-chip__name">{user}</span>
-        </span>
-      )}
-    </header>
+    <button
+      type="button"
+      className={`atelier-brand side-brand${compact ? ' side-brand--compact' : ''}`}
+      aria-haspopup="dialog"
+      title="À propos d’Atelier Wiki"
+      onClick={() => document.querySelector<HTMLDialogElement>(`#${ABOUT_ID}`)?.showModal()}
+    >
+      <span className={`atelier-brand__tile${compact ? ' atelier-brand__tile--sm' : ''}`} aria-hidden="true">
+        <AppGlyph id="wiki" />
+      </span>
+      <span className="atelier-brand__name">
+        <span className="atelier-brand__prefix">Atelier </span>Wiki
+      </span>
+    </button>
   )
 }
 
-function Brand() {
+export function AboutDialog() {
   const dialog = useRef<HTMLDialogElement>(null)
   return (
-    <>
-      <button type="button" className="atelier-brand topbar__brand" aria-haspopup="dialog" title="À propos d’Atelier Wiki" onClick={() => dialog.current?.showModal()}>
-        <span className="atelier-brand__tile" aria-hidden="true">
-          <BookOpenText />
+    <dialog
+      ref={dialog}
+      id={ABOUT_ID}
+      className="atelier-about"
+      aria-labelledby="about-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) e.currentTarget.close()
+      }}
+    >
+      <div className="atelier-about__panel">
+        <button type="button" className="atelier-about__close" aria-label="Fermer" onClick={() => dialog.current?.close()}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <span className="atelier-about__icon atelier-brand__tile" aria-hidden="true">
+          <AppGlyph id="wiki" />
         </span>
-        <span className="atelier-brand__name">
-          <span className="atelier-brand__prefix">atelier_</span>Wiki
-        </span>
-      </button>
-      <dialog
-        ref={dialog}
-        className="atelier-about"
-        aria-labelledby="about-title"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) e.currentTarget.close()
-        }}
-      >
-        <div className="atelier-about__panel">
-          <button type="button" className="atelier-about__close" aria-label="Fermer" onClick={() => dialog.current?.close()}>
-            ×
-          </button>
-          <img className="atelier-about__logo" src="/favicon.svg" alt="Logo Atelier Wiki" width={200} height={200} />
-          <h2 id="about-title" className="atelier-about__name">
-            <span className="atelier-brand__prefix">atelier_</span>Wiki
-          </h2>
-          <p className="atelier-about__tagline">Pages, procédures et notes de la suite, reliées entre elles et gardées dans leur historique.</p>
-          <p className="atelier-about__suite">Suite Atelier · hébergé chez toi</p>
-        </div>
-      </dialog>
-    </>
+        <h2 id="about-title" className="atelier-about__name">
+          <span className="atelier-brand__prefix">Atelier </span>Wiki
+        </h2>
+        <p className="atelier-about__tagline">Pages, procédures et notes de la suite, reliées entre elles et gardées dans leur historique.</p>
+        <p className="atelier-about__suite">Suite Atelier · hébergé chez toi</p>
+      </div>
+    </dialog>
   )
 }
+
+// ── Sélecteur « Suite Atelier » ─────────────────────────────────────────────
 
 type Health = 'up' | 'down' | 'checking'
 const HEALTH_TEXT: Record<Health, string> = { up: 'En marche', down: 'Arrêtée', checking: 'Vérification…' }
 
-function SuiteSwitcher() {
+export function SuiteSwitcher() {
   const [open, setOpen] = useState(false)
   const [health, setHealth] = useState<Partial<Record<SuiteAppId, Health>>>({})
   const root = useRef<HTMLDivElement>(null)
@@ -133,7 +112,7 @@ function SuiteSwitcher() {
   }
 
   return (
-    <div style={{ position: 'relative' }} ref={root}>
+    <div className="pop-anchor" ref={root}>
       <button
         ref={trigger}
         type="button"
@@ -148,7 +127,8 @@ function SuiteSwitcher() {
         <LayoutGrid />
       </button>
       {open && (
-        <div id={menuId} role="menu" aria-label="Suite Atelier" className="popover" style={{ top: 'calc(100% + 8px)', left: 0, width: 330 }} onKeyDown={onMenuKey}>
+        <div id={menuId} role="menu" aria-label="Suite Atelier" className="popover suite-menu" onKeyDown={onMenuKey}>
+          <div className="menu-heading">Suite Atelier</div>
           {SUITE_APPS.map((app) => {
             const current = app.id === CURRENT_APP
             const state: Health = current ? 'up' : (health[app.id] ?? 'checking')
@@ -156,7 +136,7 @@ function SuiteSwitcher() {
               <a
                 key={app.id}
                 role="menuitem"
-                className="menu-item"
+                className="menu-item suite-menu__item"
                 href={app.url}
                 target={current ? undefined : '_blank'}
                 rel={current ? undefined : 'noreferrer'}
@@ -169,19 +149,21 @@ function SuiteSwitcher() {
                 }}
               >
                 <span className="atelier-brand__tile atelier-brand__tile--sm" data-atelier-app={app.id} aria-hidden="true">
-                  {ICONS[app.id]}
+                  <AppGlyph id={app.id} />
                 </span>
                 <span className="menu-item__body">
                   <span className="atelier-brand__name atelier-brand__name--sm">
-                    <span className="atelier-brand__prefix">atelier_</span>
+                    <span className="atelier-brand__prefix">Atelier </span>
                     {app.short}
                   </span>
                   <span className="menu-item__sub">{app.description}</span>
                 </span>
                 {current ? (
-                  <Check aria-label="Application ouverte" />
+                  <Check className="suite-menu__check" aria-label="Application ouverte" />
                 ) : (
-                  <span className="dot" data-state={state} title={HEALTH_TEXT[state]} aria-label={HEALTH_TEXT[state]} />
+                  <span className="state" data-s={state} aria-label={HEALTH_TEXT[state]} title={HEALTH_TEXT[state]}>
+                    {state === 'checking' ? '' : HEALTH_TEXT[state]}
+                  </span>
                 )}
               </a>
             )
@@ -201,59 +183,75 @@ function SuiteSwitcher() {
   )
 }
 
+// ── Recherche, thème, auteur ────────────────────────────────────────────────
+
+export function SearchTrigger() {
+  const { openPalette } = useWiki()
+  return (
+    <button type="button" className="search-trigger" onClick={() => openPalette()} aria-label="Rechercher dans le wiki" aria-keyshortcuts="Meta+K Control+K /">
+      <Search aria-hidden />
+      <span>Rechercher…</span>
+      <kbd>{MOD_KEY} K</kbd>
+    </button>
+  )
+}
+
 const THEMES: { value: ThemePreference; label: string; icon: ReactNode }[] = [
+  { value: 'system', label: 'Système', icon: <Monitor aria-hidden /> },
   { value: 'light', label: 'Clair', icon: <Sun aria-hidden /> },
   { value: 'dark', label: 'Sombre', icon: <Moon aria-hidden /> },
-  { value: 'system', label: 'Système', icon: <Monitor aria-hidden /> },
 ]
 
-function ThemeMenu() {
+/** Système / Clair / Sombre : la préférence vaut pour toute la suite (atelier-theme.js). */
+export function ThemeSwitch() {
   const [preference, setPreference] = useTheme()
-  const [open, setOpen] = useState(false)
-  const root = useRef<HTMLDivElement>(null)
-  const trigger = useRef<HTMLButtonElement>(null)
-  const close = useCallback((restore: boolean) => {
-    setOpen(false)
-    if (restore) trigger.current?.focus()
-  }, [])
-  useDismiss(open, close, root)
-  const current = THEMES.find((t) => t.value === preference) ?? THEMES[2]!
-
   return (
-    <div style={{ position: 'relative' }} ref={root}>
-      <button
-        ref={trigger}
-        type="button"
-        className="btn btn--ghost btn--icon"
-        aria-label={`Thème : ${current.label}`}
-        title={`Thème : ${current.label}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {current.icon}
-      </button>
-      {open && (
-        <div role="menu" className="popover" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 170 }}>
-          {THEMES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="menuitemradio"
-              aria-checked={t.value === preference}
-              className="menu-item"
-              onClick={() => {
-                setPreference(t.value)
-                close(true)
-              }}
-            >
-              {t.icon}
-              <span className="menu-item__body">{t.label}</span>
-              {t.value === preference && <Check aria-hidden />}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="segmented segmented--icons" role="group" aria-label="Thème">
+      {THEMES.map((t) => (
+        <button key={t.value} type="button" aria-pressed={t.value === preference} aria-label={`Thème : ${t.label}`} title={t.label} onClick={() => setPreference(t.value)}>
+          {t.icon}
+        </button>
+      ))}
     </div>
+  )
+}
+
+export function UserChip() {
+  const { user } = useWiki()
+  if (!user) return null
+  return (
+    <span className="user-chip" title={`Connecté : ${user}`}>
+      <span className="avatar" aria-hidden>
+        {user.slice(0, 1)}
+      </span>
+      <span className="user-chip__name">{user}</span>
+    </span>
+  )
+}
+
+// ── Barre haute de la vue ───────────────────────────────────────────────────
+
+export function Topbar({ title, onToggleNav, navOpen }: { title: string; onToggleNav: () => void; navOpen: boolean }) {
+  const { openPalette } = useWiki()
+  return (
+    <header className="topbar">
+      <button
+        type="button"
+        className="btn btn--ghost btn--icon topbar__mobile"
+        aria-label={navOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+        aria-expanded={navOpen}
+        onClick={onToggleNav}
+      >
+        <Menu />
+      </button>
+      <span className="topbar__mobile">
+        <Brand compact />
+      </span>
+      <p className="topbar__title">{title}</p>
+      <div className="topbar__spacer" />
+      <button type="button" className="btn btn--ghost btn--icon topbar__mobile" aria-label="Rechercher dans le wiki" onClick={() => openPalette()}>
+        <Search />
+      </button>
+    </header>
   )
 }

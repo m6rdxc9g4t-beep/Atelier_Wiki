@@ -59,10 +59,11 @@ backend/   Fastify + TypeScript + SQLite (better-sqlite3, recherche FTS5)
   src/services/   espaces, pages, historique, recherche, pièces jointes, événements, idempotence, nœud Atelier, IA (Ollama)
   src/routes/     routes minces : wiki.ts (interface), attachments.ts, atelier.ts (Nexus), ai.ts (rédaction assistée)
 frontend/  React + TypeScript + Vite, sans framework CSS
-  src/styles/     copies verbatim du design system d'Atelier Projets + wiki.css
+  src/styles/     copies verbatim du design system d'Atelier Projets + wiki-signature.css + wiki.css
+  public/         atelier-theme.js (copie verbatim : préférence de thème de la suite), favicon
 ```
 
-Charte « néon monochrome » de la suite, couleur signature **bleu ciel `#4DABF7`** (`frontend/src/styles/wiki-signature.css`). Le texte des pages est composé dans une serif système pour la lecture longue ; l'interface garde la pile sans empattement de la suite. Aucune police téléchargée.
+Charte v2 « Linear » de la suite (`Atelier_Deploy/DESIGN.md`) : structure neutre gris froid, clair et sombre, couleur signature **bleu `#007cbb`** pour l'accent seulement (bouton principal, sélection, focus, liens) et icône Lucide `book-open` (`frontend/src/styles/wiki-signature.css`). Police Inter embarquée (aucune requête réseau), base 13 px ; le texte des pages est composé un cran plus grand (15 px) pour la lecture. Le choix du thème (Système, Clair, Sombre) est commun à toute la suite (`frontend/public/atelier-theme.js`).
 
 ## Rédaction assistée (Ollama)
 

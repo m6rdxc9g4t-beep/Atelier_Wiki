@@ -57,8 +57,9 @@ export function WikiProvider({ children, openPalette }: { children: ReactNode; o
 
   // Espace supprimé ou inconnu : on retombe sur le premier.
   useEffect(() => {
-    if (currentSpace && currentSpace.id !== spaceId) setSpaceId(currentSpace.id)
-  }, [currentSpace, spaceId])
+    // Mise à jour fonctionnelle : une vue enfant (page ouverte par son adresse) a pu choisir l'espace dans le même rendu.
+    if (currentSpace && currentSpace.id !== spaceId) setSpaceId((id) => (id !== null && list.some((s) => s.id === id) ? id : currentSpace.id))
+  }, [currentSpace, spaceId, list])
 
   const titleIndex = useMemo(() => {
     const map = new Map<string, TitleEntry>()

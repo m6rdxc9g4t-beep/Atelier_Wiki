@@ -63,7 +63,7 @@ frontend/  React + TypeScript + Vite, sans framework CSS
   public/         atelier-theme.js (copie verbatim : préférence de thème de la suite), favicon
 ```
 
-Charte v2 « Linear » de la suite (`Atelier_Deploy/DESIGN.md`) : structure neutre gris froid, clair et sombre, couleur signature **bleu `#007cbb`** pour l'accent seulement (bouton principal, sélection, focus, liens) et icône Lucide `book-open` (`frontend/src/styles/wiki-signature.css`). Police Inter embarquée (aucune requête réseau), base 13 px ; le texte des pages est composé un cran plus grand (15 px) pour la lecture. Le choix du thème (Système, Clair, Sombre) est commun à toute la suite (`frontend/public/atelier-theme.js`).
+Charte v2 « Linear » de la suite (`Atelier_Deploy/DESIGN.md`) : structure commune à la suite, crème en clair (`#f8f4ec`) et bleu nuit en sombre (`#0b1220`), couleur signature **bleu `#007cbb`** pour l'accent seulement (bouton principal, sélection, focus, liens) et icône Lucide `book-open` (`frontend/src/styles/wiki-signature.css`). Police Inter embarquée (aucune requête réseau), base 13 px ; le texte des pages est composé un cran plus grand (15 px) pour la lecture. Le choix du thème (Système, Clair, Sombre) est commun à toute la suite (`frontend/public/atelier-theme.js`).
 
 ## Rédaction assistée (Ollama)
 

@@ -1,7 +1,7 @@
 /* ==========================================================================
    Atelier Wiki — interface.
    Charte v2 « Linear » de la suite (docs/SUITE.md §1.7 d'Atelier Projets, règles : Atelier_Deploy/DESIGN.md) :
-   structure neutre gris froid commune (jetons --app-* / --atelier-*), la signature du Wiki (bleu #007cbb)
+   structure commune à la suite, crème en clair et bleu nuit en sombre (jetons --app-* / --atelier-*), la signature du Wiki (bleu #007cbb)
    ne sert qu'à l'accent : bouton principal, sélection, focus, liens, icône. Plat au repos, traits de 1 px,
    Inter partout, base 13 px. Aucune couleur littérale ici : uniquement des jetons.
    ========================================================================== */
@@ -18,9 +18,12 @@
   /* États anormaux seulement (un état nominal reste neutre). */
   --danger: var(--atelier-down, var(--status-rejected));
   --warning: var(--atelier-warn, var(--status-hold));
-  /* Données : ajouts / suppressions de l'historique (couleurs de sens, inchangées). */
+  /* Données : ajouts / suppressions de l'historique (couleurs de sens, inchangées) ; signes « + » / « − » dans la
+     même teinte rapprochée de l'encre (--diff-*-ink), ≥ 4,5:1 sur crème comme sur bleu nuit. */
   --diff-add: var(--status-closed);
   --diff-del: var(--status-rejected);
+  --diff-add-ink: color-mix(in oklab, var(--diff-add) 62%, var(--app-text));
+  --diff-del-ink: color-mix(in oklab, var(--diff-del) 72%, var(--app-text));
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --pop-shadow: var(--ds-shadow-overlay);
   /* Voile sous les fenêtres et le tiroir : sombre dans les deux thèmes. */
@@ -1681,13 +1684,13 @@ dialog.dialog::backdrop {
   background: color-mix(in oklab, var(--diff-add) 12%, transparent);
 }
 .diff__line[data-sign="+"]::before {
-  color: var(--diff-add);
+  color: var(--diff-add-ink);
 }
 .diff__line[data-sign="−"] {
   background: color-mix(in oklab, var(--diff-del) 11%, transparent);
 }
 .diff__line[data-sign="−"]::before {
-  color: var(--diff-del);
+  color: var(--diff-del-ink);
 }
 .diff__gap {
   padding: 3px 0 3px 26px;

@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "immobilier-locatif",
+  "titre": "SCI Les Tilleuls",
+  "sous_titre": "Gestion locative de six appartements",
+  "secteur": "Immobilier",
+  "resume": "La SCI familiale Les Tilleuls loue six appartements à Nantes : loyers encaissés, charges, état locatif, travaux ; en octobre un appartement est vacant, un loyer est impayé et les travaux de remise en état dépassent leur budget."
+ },
+ "espace": {
+  "nom": "SCI Les Tilleuls",
+  "icone": "🏠",
+  "description": "Procédures de gestion locative et comptes rendus de la SCI."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "La SCI familiale Les Tilleuls loue six appartements à Nantes : loyers encaissés, charges, état locatif, travaux ; en octobre un appartement est vacant, un loyer est impayé et les travaux de remise en état dépassent leur budget.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Gestion locative » ; l'export CSV français part dans Trésorerie. Essayez aussi « Quittances d'octobre (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Gestion locative » réunit les opérations catégorisées et « État locatif ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Travaux du mois » se déclenche : 3 540,00 € pour un seuil de 1 500,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte courant SCI Les Tilleuls » et ses budgets de octobre 2026 : « Travaux » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Gestion 2026 — SCI Les Tilleuls » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « SCI Les Tilleuls » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 11 480,00 € |\n| Encaissements | 4 775,00 € |\n| Décaissements | 3 435,33 € |\n| Solde final | 12 819,67 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Emprunt | 2 380,00 € |\n| Travaux | 540,00 € |\n| Charges de copropriété | 410,00 € |\n| Assurances | 93,33 € |\n| Banque | 12,00 € |\n\n## Point d'attention\n\n- [x] Travaux : 540,00 €, sous le seuil de 1 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 12 819,67 € |\n| Encaissements | 5 283,00 € |\n| Décaissements | 4 045,33 € |\n| Solde final | 14 057,34 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Emprunt | 2 380,00 € |\n| Travaux | 1 150,00 € |\n| Charges de copropriété | 410,00 € |\n| Assurances | 93,33 € |\n| Banque | 12,00 € |\n\n## Point d'attention\n\n- [x] Travaux : 1 150,00 €, sous le seuil de 1 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 14 057,34 € |\n| Encaissements | 2 820,00 € |\n| Décaissements | 9 754,33 € |\n| Solde final | 7 123,01 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Travaux | 3 540,00 € |\n| Taxe foncière | 3 240,00 € |\n| Emprunt | 2 380,00 € |\n| Charges de copropriété | 410,00 € |\n| Assurances | 93,33 € |\n| Gestion locative | 79,00 € |\n| Banque | 12,00 € |\n\n## Point d'attention\n\n- [ ] Travaux : 3 540,00 € pour un seuil de 1 500,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Entrée et sortie d'un locataire",
+   "parent": null,
+   "icone": "🔑",
+   "contenu": "## Entrée\n1. Bail signé, dépôt de garantie (un mois hors charges) encaissé.\n2. État des lieux d'entrée avec photos.\n3. Ajouter le locataire dans l'état locatif (Tab, table *État locatif*).\n\n## Sortie\n1. État des lieux de sortie, comparaison avec l'entrée.\n2. Restitution du dépôt sous un mois (deux en cas de dégradations).\n3. Remise en état : une tâche par lot dans Projets.\n"
+  },
+  {
+   "titre": "Procédure en cas d'impayé",
+   "parent": null,
+   "icone": "⚠️",
+   "contenu": "- J+5 : relance amiable (téléphone puis courrier).\n- J+15 : mise en demeure en recommandé.\n- J+30 : déclaration à l'assurance loyers impayés, s'il y en a une ; sinon commandement de payer par huissier.\n\nSuivi dans Projets, story *Impayés*.\n"
+  },
+  {
+   "titre": "Assemblée générale 2026 — ordre du jour",
+   "parent": null,
+   "icone": "🗳️",
+   "contenu": "1. Comptes 2026 : loyers, travaux, taxe foncière.\n2. Relocation de l'appartement 6.\n3. Travaux 2027 : isolation des combles (devis à demander).\n\nVoir [[Entrée et sortie d'un locataire]].\n"
+  }
+ ]
+}

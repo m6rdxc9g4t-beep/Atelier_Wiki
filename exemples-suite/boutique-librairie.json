@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "boutique-librairie",
+  "titre": "Librairie Les Pages Vives",
+  "sous_titre": "Ventes, stock et commandes d'une librairie-papeterie",
+  "secteur": "Boutique",
+  "resume": "Une librairie-papeterie de la Croix-Rousse à Lyon : caisse par rayon, stock et commandes aux distributeurs, rentrée scolaire puis préparation des fêtes ; les achats de livres d'octobre dépassent."
+ },
+ "espace": {
+  "nom": "Les Pages Vives",
+  "icone": "📚",
+  "description": "Procédures de la boutique : caisse, commandes, inventaire."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Une librairie-papeterie de la Croix-Rousse à Lyon : caisse par rayon, stock et commandes aux distributeurs, rentrée scolaire puis préparation des fêtes ; les achats de livres d'octobre dépassent.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Boutique 2026 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Ventes de la caisse par rayon (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Boutique 2026 » réunit les opérations catégorisées et « Stock et commandes ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Achats de livres du mois » se déclenche : 15 200,00 € pour un seuil de 13 000,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte pro Les Pages Vives » et ses budgets de octobre 2026 : « Achats livres » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Fêtes de fin d'année 2026 — Les Pages Vives » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Les Pages Vives » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 14 600,00 € |\n| Encaissements | 19 986,90 € |\n| Décaissements | 15 965,20 € |\n| Solde final | 18 621,70 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats livres | 6 200,00 € |\n| Salaires | 4 900,00 € |\n| Achats papeterie | 2 850,00 € |\n| Loyer | 1 680,00 € |\n| Énergie | 138,02 € |\n| Banque | 108,18 € |\n| Logiciels | 89,00 € |\n\n## Point d'attention\n\n- [x] Achats livres : 6 200,00 €, sous le seuil de 13 000,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 18 621,70 € |\n| Encaissements | 27 697,59 € |\n| Décaissements | 19 404,93 € |\n| Solde final | 26 914,36 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats livres | 12 500,00 € |\n| Salaires | 4 900,00 € |\n| Loyer | 1 680,00 € |\n| Énergie | 135,09 € |\n| Banque | 100,84 € |\n| Logiciels | 89,00 € |\n\n## Point d'attention\n\n- [x] Achats livres : 12 500,00 €, sous le seuil de 13 000,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 26 914,36 € |\n| Encaissements | 25 024,50 € |\n| Décaissements | 22 330,69 € |\n| Solde final | 29 608,17 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats livres | 15 200,00 € |\n| Salaires | 4 900,00 € |\n| Loyer | 1 680,00 € |\n| Vitrine et animation | 240,00 € |\n| Énergie | 133,89 € |\n| Logiciels | 89,00 € |\n| Banque | 87,80 € |\n\n## Point d'attention\n\n- [ ] Achats livres : 15 200,00 € pour un seuil de 13 000,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Clôture de caisse",
+   "parent": null,
+   "icone": "🧮",
+   "contenu": "Chaque soir :\n1. Compter le fond de caisse (150 €) et les espèces.\n2. Éditer le ticket Z ; vérifier l'écart avec le logiciel (tolérance 2 €).\n3. Remise d'espèces à la banque le dernier jour du mois.\n\nL'export *Ventes de la caisse par rayon* se convertit dans Convert, puis part dans Viz.\n"
+  },
+  {
+   "titre": "Commandes aux distributeurs",
+   "parent": null,
+   "icone": "📦",
+   "contenu": "- Nord Sud (livres) : commande le lundi, livraison le jeudi suivant ; office mensuel le 10.\n- Diffuseur BD : nouveautés le mercredi.\n- Clairefontaine (papeterie) : deux grosses commandes par an, juillet et janvier.\n\nRègle : commander quand le stock passe sous le seuil (colonne *À commander* dans Tab, table *Stock et commandes*). Voir aussi [[Inventaire annuel]].\n"
+  },
+  {
+   "titre": "Inventaire annuel",
+   "parent": null,
+   "icone": "🗃️",
+   "contenu": "Le 31 décembre après fermeture. Prévoir deux personnes, une demi-journée. Écarts au-delà de 1 % à expliquer.\n"
+  }
+ ]
+}

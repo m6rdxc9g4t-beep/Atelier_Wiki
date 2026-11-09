@@ -1,0 +1,59 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "finance-patrimoine",
+  "titre": "Lemaire Patrimoine",
+  "sous_titre": "Portefeuille et allocation d'une holding familiale",
+  "secteur": "Finance",
+  "resume": "La holding de la famille Lemaire place sa trésorerie : achats d'ETF, dividendes, comité mensuel, allocation cible ; les frais de courtage d'octobre dépassent l'enveloppe après un rééquilibrage."
+ },
+ "espace": {
+  "nom": "Lemaire Patrimoine",
+  "icone": "📈",
+  "description": "Politique d'investissement et comptes rendus du comité."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "La holding de la famille Lemaire place sa trésorerie : achats d'ETF, dividendes, comité mensuel, allocation cible ; les frais de courtage d'octobre dépassent l'enveloppe après un rééquilibrage.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Allocation 2026 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Opérations du compte-titres (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Allocation 2026 » réunit les opérations catégorisées et « Allocation cible ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Frais de courtage du mois » se déclenche : 421,62 € pour un seuil de 250,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte courant Lemaire Patrimoine » et ses budgets de octobre 2026 : « Frais de courtage » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Rééquilibrage 2026 — Lemaire Patrimoine » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Lemaire Patrimoine » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 212 400,00 € |\n| Encaissements | 3 916,80 € |\n| Décaissements | 19 638,52 € |\n| Solde final | 196 678,28 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats de titres | 19 090,00 € |\n| Honoraires comptables | 480,00 € |\n| Frais de courtage | 38,52 € |\n| Banque | 30,00 € |\n\n## Point d'attention\n\n- [x] Frais de courtage : 38,52 €, sous le seuil de 250,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 196 678,28 € |\n| Encaissements | 5 002,50 € |\n| Décaissements | 10 409,61 € |\n| Solde final | 191 271,17 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats de titres | 9 870,00 € |\n| Honoraires comptables | 480,00 € |\n| Banque | 30,00 € |\n| Frais de courtage | 29,61 € |\n\n## Point d'attention\n\n- [x] Frais de courtage : 29,61 €, sous le seuil de 250,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 191 271,17 € |\n| Encaissements | 45 375,00 € |\n| Décaissements | 38 191,62 € |\n| Solde final | 198 454,55 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Achats de titres | 37 260,00 € |\n| Honoraires comptables | 480,00 € |\n| Frais de courtage | 421,62 € |\n| Banque | 30,00 € |\n\n## Point d'attention\n\n- [ ] Frais de courtage : 421,62 € pour un seuil de 250,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Politique d'investissement",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Horizon 10 ans, risque modéré.\n\n| Classe d'actifs | Cible | Marge |\n|---|---:|---:|\n| Actions monde | 40 % | ± 5 pts |\n| Obligations | 30 % | ± 5 pts |\n| Immobilier | 20 % | ± 5 pts |\n| Trésorerie | 10 % | ± 3 pts |\n\nUn écart au-delà de la marge déclenche un rééquilibrage au comité suivant. Suivi de l'allocation : table *Allocation cible* dans Tab.\n"
+  },
+  {
+   "titre": "Comité du 24 septembre 2026",
+   "parent": null,
+   "icone": "🗳️",
+   "contenu": "Actions à 49 % pour une cible de 40 % : rééquilibrage voté.\n\n- [x] Vendre 80 parts d'ETF S&P 500\n- [x] Racheter de l'Euro Stoxx 50 et des obligations euro\n- [ ] Revoir les frais de courtage, élevés sur les gros ordres\n\nVoir la [[Politique d'investissement]].\n"
+  }
+ ]
+}

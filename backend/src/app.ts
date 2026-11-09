@@ -12,6 +12,7 @@ import { isAllowedHost, isAllowedOrigin, isWrite, requestUser } from './http/gua
 import { aiRoutes } from './routes/ai.js'
 import { atelierRoutes } from './routes/atelier.js'
 import { attachmentRoutes } from './routes/attachments.js'
+import { exempleRoutes } from './routes/exemples.js'
 import { wikiRoutes } from './routes/wiki.js'
 import { OllamaClient, type FetchFn } from './services/ai.js'
 import { pruneEvents } from './services/events.js'
@@ -110,6 +111,7 @@ export async function buildApp({ config, db, seed = true, logger = false, aiFetc
   await app.register(attachmentRoutes)
   await app.register(atelierRoutes)
   await app.register(aiRoutes)
+  await app.register(exempleRoutes)
 
   if (config.staticDir) {
     const staticDir = config.staticDir

@@ -1,0 +1,53 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "studio-garance",
+  "titre": "Studio Garance",
+  "sous_titre": "Clôture comptable d'un studio de design",
+  "secteur": "Compta",
+  "resume": "Un studio de design graphique d'Arles clôture son mois : relevés bancaires convertis, catégorisés, comparés au budget ; le poste Matériel dépasse et devient une tâche de suivi."
+ },
+ "espace": {
+  "nom": "Studio Garance",
+  "icone": "🎨",
+  "description": "Procédures et clôtures mensuelles du studio."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Un studio de design graphique d'Arles clôture son mois : relevés bancaires convertis, catégorisés, comparés au budget ; le poste Matériel dépasse et devient une tâche de suivi.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Compta 2026 » ; l'export CSV français part dans Trésorerie.\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Compta 2026 » réunit les opérations catégorisées et « Clients et factures ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Matériel du mois » se déclenche : 708,00 € pour un seuil de 600,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte pro Studio Garance » et ses budgets de octobre 2026 : « Matériel » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Gestion 2026 — Studio Garance » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Studio Garance » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 2 776,65 € |\n| Encaissements | 3 600,00 € |\n| Décaissements | 2 914,20 € |\n| Solde final | 3 462,45 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Locaux | 1 150,00 € |\n| Charges sociales | 640,00 € |\n| Matériel | 575,30 € |\n| Logiciels | 254,31 € |\n| Déplacements | 124,00 € |\n| Repas | 58,40 € |\n| Télécom | 54,99 € |\n| Assurances | 48,20 € |\n| Banque | 9,00 € |\n\n## Point d'attention\n\n- [x] Matériel : 575,30 €, sous le seuil de 600,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 3 462,45 € |\n| Encaissements | 4 150,00 € |\n| Décaissements | 3 402,10 € |\n| Solde final | 4 210,35 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Locaux | 1 150,00 € |\n| Matériel | 785,02 € |\n| Charges sociales | 640,00 € |\n| Formation | 450,00 € |\n| Déplacements | 156,40 € |\n| Logiciels | 71,99 € |\n| Télécom | 54,99 € |\n| Assurances | 48,20 € |\n| Repas | 36,50 € |\n| Banque | 9,00 € |\n\n## Point d'attention\n\n- [ ] Matériel : 785,02 € pour un seuil de 600,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 4 210,35 € |\n| Encaissements | 5 210,00 € |\n| Décaissements | 2 814,48 € |\n| Solde final | 6 605,87 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Locaux | 1 150,00 € |\n| Matériel | 708,00 € |\n| Charges sociales | 640,00 € |\n| Déplacements | 89,50 € |\n| Logiciels | 71,99 € |\n| Télécom | 54,99 € |\n| Assurances | 48,20 € |\n| Repas | 42,80 € |\n| Banque | 9,00 € |\n\n## Point d'attention\n\n- [ ] Matériel : 708,00 € pour un seuil de 600,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Fournisseurs",
+   "parent": null,
+   "icone": "🏷️",
+   "contenu": "Fournisseurs réguliers du studio.\n\n| Fournisseur | Poste | Remarque |\n|---|---|---|\n| Boesner (Arles) | Matériel | Papiers, encres, cadres. Deux à trois passages par mois. |\n| Imprimerie du Rhône | Matériel | Tirages clients : à refacturer quand c'est possible. |\n| LDLC Pro | Matériel | Informatique. |\n| Adobe, Ionos | Logiciels | Abonnements mensuels. |\n| SCI des Tanneurs | Locaux | Loyer de l'atelier, le 1er du mois. |\n"
+  }
+ ]
+}

@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "freelance-data",
+  "titre": "Consultant data freelance",
+  "sous_titre": "Missions, temps facturé et trésorerie d'un indépendant",
+  "secteur": "Freelance",
+  "resume": "Julien Morel, consultant data indépendant à Dijon : missions suivies dans Tab et Projets, temps passé, factures payées via une plateforme, provisions URSSAF ; ses frais de logiciels dérapent en octobre."
+ },
+ "espace": {
+  "nom": "Julien Morel — freelance",
+  "icone": "📊",
+  "description": "Fiches missions, modèles et règles de gestion de l'activité."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Julien Morel, consultant data indépendant à Dijon : missions suivies dans Tab et Projets, temps passé, factures payées via une plateforme, provisions URSSAF ; ses frais de logiciels dérapent en octobre.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Missions 2026 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Paiements de la plateforme freelance (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Missions 2026 » réunit les opérations catégorisées et « Missions ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Logiciels du mois » se déclenche : 1 142,60 € pour un seuil de 300,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte pro Julien Morel » et ses budgets de octobre 2026 : « Logiciels » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Missions 2026 — Julien Morel » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Julien Morel — freelance » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 9 120,00 € |\n| Encaissements | 7 800,00 € |\n| Décaissements | 2 470,26 € |\n| Solde final | 14 449,74 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Cotisations sociales | 1 130,17 € |\n| Provision impôts | 900,00 € |\n| Coworking | 290,00 € |\n| Assurances | 46,50 € |\n| Déplacements | 42,00 € |\n| Télécom | 39,99 € |\n| Logiciels | 13,60 € |\n| Banque | 8,00 € |\n\n## Point d'attention\n\n- [x] Logiciels : 13,60 €, sous le seuil de 300,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 14 449,74 € |\n| Encaissements | 7 800,00 € |\n| Décaissements | 2 542,07 € |\n| Solde final | 19 707,67 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Cotisations sociales | 1 105,08 € |\n| Provision impôts | 900,00 € |\n| Coworking | 290,00 € |\n| Déplacements | 84,00 € |\n| Formation | 54,90 € |\n| Assurances | 46,50 € |\n| Télécom | 39,99 € |\n| Logiciels | 13,60 € |\n| Banque | 8,00 € |\n\n## Point d'attention\n\n- [x] Logiciels : 13,60 €, sous le seuil de 300,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 19 707,67 € |\n| Encaissements | 5 820,00 € |\n| Décaissements | 3 719,97 € |\n| Solde final | 21 807,70 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Cotisations sociales | 1 160,38 € |\n| Logiciels | 1 142,60 € |\n| Provision impôts | 900,00 € |\n| Coworking | 290,00 € |\n| Déplacements | 84,00 € |\n| Formation | 48,50 € |\n| Assurances | 46,50 € |\n| Télécom | 39,99 € |\n| Banque | 8,00 € |\n\n## Point d'attention\n\n- [ ] Logiciels : 1 142,60 € pour un seuil de 300,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Fiche mission — Coopérative Laitière du Jura",
+   "parent": null,
+   "icone": "🥛",
+   "contenu": "**Objet** : tableau de bord de la collecte de lait (18 jours, TJM 620 €).\n\n**Contacts** : service qualité, responsable des tournées.\n\n## Livrables\n- [x] Modèle de données collecte\n- [x] Indicateurs qualité (TB, TP, cellules)\n- [ ] Tableau de bord par tournée\n- [ ] Recette\n\nTemps passé : projet *Missions 2026* dans Projets. Facturation : voir [[Règles de facturation]].\n"
+  },
+  {
+   "titre": "Règles de facturation",
+   "parent": null,
+   "icone": "🧾",
+   "contenu": "- Facture à la fin de chaque mois, sur les jours réellement passés (colonne *Jours faits* dans Tab).\n- Paiement à 30 jours ; les clients passés par la plateforme paient via elle (commission de 4 %).\n- Provision : 25 % des encaissements pour l'URSSAF, 900 € par mois pour l'impôt.\n"
+  },
+  {
+   "titre": "Outils et abonnements",
+   "parent": null,
+   "icone": "🧰",
+   "contenu": "| Outil | Coût | Échéance |\n|---|---:|---|\n| Google Workspace | 13,60 €/mois | mensuel |\n| JetBrains (DataGrip) | 289 €/an | octobre |\n| Tableau Creator | 840 €/an | octobre |\n\nOctobre concentre les renouvellements annuels : le budget *Logiciels* du mois est dépassé.\n"
+  }
+ ]
+}

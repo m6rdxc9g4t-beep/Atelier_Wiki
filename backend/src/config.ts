@@ -28,6 +28,8 @@ export interface WikiConfig {
   publicUrl: string | null
   /** IA de rédaction : serveur Ollama (même hôte par défaut), modèle et délai maximal d'une génération. */
   ollama: OllamaConfig
+  /** Exemples de la suite (`exemples-suite/`, format atelier-exemples/1 ; `WIKI_EXEMPLES_DIR`). */
+  exemplesDir: string
   logLevel: string
 }
 
@@ -73,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WikiConfig {
       model: env.OLLAMA_MODEL?.trim() || 'llama3.1:8b',
       timeoutMs: positiveNumber(env.OLLAMA_TIMEOUT_MS, 300_000),
     },
+    exemplesDir: resolve(env.WIKI_EXEMPLES_DIR?.trim() || resolve(backendRoot, '..', 'exemples-suite')),
     logLevel: env.LOG_LEVEL || 'info',
   }
 }

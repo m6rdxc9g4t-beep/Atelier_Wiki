@@ -178,8 +178,32 @@ async function request<T>(method: string, url: string, body?: unknown, signal?: 
   return data as T
 }
 
+/** Exemples de la suite (miroir de backend/src/services/exemples.ts). */
+export interface ExempleEtape {
+  app: string
+  titre: string
+  texte: string
+}
+export interface ExempleHistoire {
+  id: string
+  titre: string
+  sous_titre: string
+  secteur: string
+  resume: string
+  parcours: ExempleEtape[]
+  espace: string
+  pages: number
+  charge: boolean
+  spaceId: number | null
+  pageId: number | null
+}
+
 export const api = {
   me: () => request<{ user: string; version: string }>('GET', '/api/me'),
+  exemples: () => request<ExempleHistoire[]>('GET', '/api/exemples-suite'),
+  loadExemple: (id: string) =>
+    request<{ spaceId: number; pageId: number | null; dejaCharge: boolean }>('POST', `/api/exemples-suite/${encodeURIComponent(id)}`),
+  removeExemple: (id: string) => request<void>('DELETE', `/api/exemples-suite/${encodeURIComponent(id)}`),
   home: () => request<Home>('GET', '/api/home'),
 
   spaces: () => request<Space[]>('GET', '/api/spaces'),

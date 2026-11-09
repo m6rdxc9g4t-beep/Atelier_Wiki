@@ -102,6 +102,14 @@ const MIGRATIONS: readonly string[] = [
     created_at  TEXT NOT NULL
   );
   `,
+  // Exemples de la suite : espace créé par chaque histoire chargée (seul supprimé par son retrait).
+  `
+  CREATE TABLE suite_examples (
+    histoire   TEXT PRIMARY KEY,
+    space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL
+  );
+  `,
 ]
 
 export function migrate(db: Db): void {

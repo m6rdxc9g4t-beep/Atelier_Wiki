@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "app-ecommerce",
+  "titre": "App E-Commerce v2",
+  "sous_titre": "Une boutique en ligne lance la v2 de son app",
+  "secteur": "Produit",
+  "resume": "Verveine & Co, boutique de thés en ligne, sort la v2 de son app en octobre : backlog et sprints, commandes du back-office, virements Stripe ; la pub du lancement dépasse son budget."
+ },
+ "espace": {
+  "nom": "Verveine & Co — App v2",
+  "icone": "🍵",
+  "description": "Spécifications, rétrospectives et bilan du lancement de l'app v2."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Verveine & Co, boutique de thés en ligne, sort la v2 de son app en octobre : backlog et sprints, commandes du back-office, virements Stripe ; la pub du lancement dépasse son budget.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « App E-Commerce v2 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Commandes du back-office (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « App E-Commerce v2 » réunit les opérations catégorisées et « Backlog v2 ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Publicité du mois » se déclenche : 2 480,00 € pour un seuil de 1 500,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte pro Verveine & Co » et ses budgets de octobre 2026 : « Publicité » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « App E-Commerce v2 — Verveine & Co » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Verveine & Co — App v2 » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 38 450,00 € |\n| Encaissements | 5 029,56 € |\n| Décaissements | 14 284,69 € |\n| Solde final | 29 194,87 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 9 800,00 € |\n| Achats marchandises | 2 850,00 € |\n| Logistique | 589,69 € |\n| Publicité | 420,00 € |\n| Hébergement | 389,00 € |\n| Outils | 212,00 € |\n| Banque | 24,00 € |\n\n## Point d'attention\n\n- [x] Publicité : 420,00 €, sous le seuil de 1 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 29 194,87 € |\n| Encaissements | 5 725,58 € |\n| Décaissements | 17 103,49 € |\n| Solde final | 17 816,96 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 9 800,00 € |\n| Achats marchandises | 3 120,00 € |\n| Prestataires | 2 400,00 € |\n| Logistique | 648,49 € |\n| Publicité | 510,00 € |\n| Hébergement | 389,00 € |\n| Outils | 212,00 € |\n| Banque | 24,00 € |\n\n## Point d'attention\n\n- [x] Publicité : 510,00 €, sous le seuil de 1 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 17 816,96 € |\n| Encaissements | 6 338,76 € |\n| Décaissements | 17 510,03 € |\n| Solde final | 6 645,69 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 9 800,00 € |\n| Achats marchandises | 3 990,00 € |\n| Publicité | 2 480,00 € |\n| Logistique | 615,03 € |\n| Hébergement | 389,00 € |\n| Outils | 212,00 € |\n| Banque | 24,00 € |\n\n## Point d'attention\n\n- [ ] Publicité : 2 480,00 € pour un seuil de 1 500,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Spécification du tunnel de commande",
+   "parent": null,
+   "icone": "🛒",
+   "contenu": "Trois étapes : panier, livraison, paiement.\n\n- Paiement en un clic (Apple Pay, Google Pay) dès qu'un moyen est enregistré.\n- Le panier est sauvegardé côté serveur : il survit à la mise en veille (bug iOS du sprint 8).\n- Abandon de panier : notification à H+2, puis e-mail à J+1.\n\nSuivi : backlog *Backlog v2* dans Tab, projet *App E-Commerce v2* dans Projets.\n"
+  },
+  {
+   "titre": "Rétrospective du sprint 9",
+   "parent": null,
+   "icone": "🔁",
+   "contenu": "## Ce qui a marché\n- Sortie de la v2 le 5 octobre sans incident majeur.\n\n## À améliorer\n- Le panier moyen baisse depuis la v2 (voir le jeu *Commandes* dans Viz) : l'affichage du coffret découverte a disparu de la page d'accueil.\n- La publicité du lancement a dépassé son budget : voir [[Bilan du lancement]].\n"
+  },
+  {
+   "titre": "Bilan du lancement",
+   "parent": null,
+   "icone": "🚀",
+   "contenu": "Commandes d'octobre en hausse, panier moyen en baisse. Dépenses publicitaires : Meta et Google au-dessus de l'enveloppe prévue.\n\nProchaines actions dans Projets, story *Suivi des budgets*.\n"
+  }
+ ]
+}

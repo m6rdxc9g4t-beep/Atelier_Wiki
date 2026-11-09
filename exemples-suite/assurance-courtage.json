@@ -1,0 +1,59 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "assurance-courtage",
+  "titre": "Arpège Courtage",
+  "sous_titre": "Portefeuille, sinistres et renouvellements d'un cabinet de courtage",
+  "secteur": "Assurance",
+  "resume": "Le cabinet Arpège, à Toulouse, gère 7 clients professionnels : primes, commissions, sinistres déclarés ; la flotte automobile se dégrade et les frais juridiques dépassent leur budget en octobre."
+ },
+ "espace": {
+  "nom": "Arpège Courtage",
+  "icone": "🛡️",
+  "description": "Procédures du cabinet et fiches par branche."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "Le cabinet Arpège, à Toulouse, gère 7 clients professionnels : primes, commissions, sinistres déclarés ; la flotte automobile se dégrade et les frais juridiques dépassent leur budget en octobre.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Portefeuille 2026 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Bordereau de sinistres (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Portefeuille 2026 » réunit les opérations catégorisées et « Contrats ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Frais juridiques du mois » se déclenche : 2 360,00 € pour un seuil de 800,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte pro Arpège Courtage » et ses budgets de octobre 2026 : « Frais juridiques » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Renouvellements T4 2026 — Arpège Courtage » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Arpège Courtage » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 31 250,00 € |\n| Encaissements | 7 940,19 € |\n| Décaissements | 9 782,00 € |\n| Solde final | 29 408,19 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 7 400,00 € |\n| Locaux | 1 350,00 € |\n| Logiciels | 420,00 € |\n| Frais juridiques | 380,00 € |\n| Assurances | 210,00 € |\n| Banque | 22,00 € |\n\n## Point d'attention\n\n- [x] Frais juridiques : 380,00 €, sous le seuil de 800,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 29 408,19 € |\n| Encaissements | 7 799,46 € |\n| Décaissements | 10 472,00 € |\n| Solde final | 26 735,65 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 7 400,00 € |\n| Locaux | 1 350,00 € |\n| Prospection | 650,00 € |\n| Logiciels | 420,00 € |\n| Frais juridiques | 420,00 € |\n| Assurances | 210,00 € |\n| Banque | 22,00 € |\n\n## Point d'attention\n\n- [x] Frais juridiques : 420,00 €, sous le seuil de 800,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 26 735,65 € |\n| Encaissements | 7 696,08 € |\n| Décaissements | 12 152,00 € |\n| Solde final | 22 279,73 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Salaires | 7 400,00 € |\n| Frais juridiques | 2 360,00 € |\n| Locaux | 1 350,00 € |\n| Logiciels | 420,00 € |\n| Formation | 390,00 € |\n| Assurances | 210,00 € |\n| Banque | 22,00 € |\n\n## Point d'attention\n\n- [ ] Frais juridiques : 2 360,00 € pour un seuil de 800,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Procédure de déclaration de sinistre",
+   "parent": null,
+   "icone": "🚨",
+   "contenu": "1. Recueillir la déclaration du client sous 5 jours ouvrés (2 jours pour un vol).\n2. Transmettre à l'assureur avec photos, constat et devis.\n3. Noter le sinistre dans le bordereau mensuel (export *Bordereau de sinistres*, à convertir dans Convert).\n4. Mettre à jour la colonne *Sinistres 2026* du contrat dans Tab : le ratio S/P se recalcule.\n5. Au-delà de 60 % de S/P, préparer le renouvellement avec l'assureur (voir [[Fiche branche — flotte automobile]]).\n"
+  },
+  {
+   "titre": "Fiche branche — flotte automobile",
+   "parent": null,
+   "icone": "🚚",
+   "contenu": "Deux clients : Transports Mercier, Taxis Rive Droite.\n\nSinistralité 2026 élevée (S/P au-dessus de 75 % pour les deux). Pistes pour le renouvellement :\n- franchise plus haute sur les dommages ;\n- boîtiers de conduite et formation des chauffeurs ;\n- mise en concurrence avec la Compagnie Horizon.\n"
+  }
+ ]
+}

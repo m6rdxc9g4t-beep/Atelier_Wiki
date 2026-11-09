@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "marketing-campagne",
+  "titre": "Campagne Brume",
+  "sous_titre": "Lancement d'une marque de cosmétiques par une agence",
+  "secteur": "Marketing",
+  "resume": "L'agence Orbe lance la gamme d'automne de Brume Cosmétiques : plan média, performances par canal, factures des régies ; le budget Meta explose au lancement et le coût d'acquisition grimpe."
+ },
+ "espace": {
+  "nom": "Brume — campagne d'automne",
+  "icone": "📣",
+  "description": "Brief, règles de marque et bilan de la campagne de lancement."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "L'agence Orbe lance la gamme d'automne de Brume Cosmétiques : plan média, performances par canal, factures des régies ; le budget Meta explose au lancement et le coût d'acquisition grimpe.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Brume — lancement automne » ; l'export CSV français part dans Trésorerie. Essayez aussi « Performances des régies (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Brume — lancement automne » réunit les opérations catégorisées et « Plan média ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Dépenses Meta du mois » se déclenche : 4 320,00 € pour un seuil de 2 500,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte client Brume (agence Orbe) » et ses budgets de octobre 2026 : « Meta » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Brume — lancement automne 2026 » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Brume — campagne d'automne » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 9 800,00 € |\n| Encaissements | 4 000,00 € |\n| Décaissements | 4 813,00 € |\n| Solde final | 8 987,00 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Production | 1 600,00 € |\n| Meta | 1 250,00 € |\n| Google Ads | 940,00 € |\n| TikTok | 690,00 € |\n| Outils | 318,00 € |\n| Banque | 15,00 € |\n\n## Point d'attention\n\n- [x] Meta : 1 250,00 €, sous le seuil de 2 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 8 987,00 € |\n| Encaissements | 4 000,00 € |\n| Décaissements | 4 283,00 € |\n| Solde final | 8 704,00 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Influence | 1 200,00 € |\n| Meta | 1 180,00 € |\n| Google Ads | 910,00 € |\n| TikTok | 660,00 € |\n| Outils | 318,00 € |\n| Banque | 15,00 € |\n\n## Point d'attention\n\n- [x] Meta : 1 180,00 €, sous le seuil de 2 500,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 8 704,00 € |\n| Encaissements | 9 000,00 € |\n| Décaissements | 10 853,00 € |\n| Solde final | 6 851,00 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Meta | 4 320,00 € |\n| Influence | 2 500,00 € |\n| TikTok | 2 210,00 € |\n| Google Ads | 1 490,00 € |\n| Outils | 318,00 € |\n| Banque | 15,00 € |\n\n## Point d'attention\n\n- [ ] Meta : 4 320,00 € pour un seuil de 2 500,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Brief de campagne",
+   "parent": null,
+   "icone": "🎯",
+   "contenu": "**Client** : Brume Cosmétiques. **Produit** : gamme d'automne (sérum, crème, baume).\n\n**Objectif** : 1 200 ventes en ligne en octobre, coût d'acquisition sous 20 €.\n\n**Cibles** : 25-40 ans, sensibles aux cosmétiques naturels.\n\nPlan média détaillé : table *Plan média* dans Tab. Règles de marque : [[Charte de marque Brume]].\n"
+  },
+  {
+   "titre": "Charte de marque Brume",
+   "parent": null,
+   "icone": "🌫️",
+   "contenu": "- Ton : calme, précis, jamais d'urgence artificielle (« dernière chance »…).\n- Couleurs : gris brume, vert sauge, sable.\n- Mentions obligatoires : liste INCI accessible depuis chaque publicité.\n"
+  },
+  {
+   "titre": "Bilan intermédiaire du lancement",
+   "parent": null,
+   "icone": "📊",
+   "contenu": "Octobre : Meta a dépensé bien au-delà de son budget (fréquence trop forte sur la même audience), pour un coût d'acquisition en hausse. TikTok tient son budget, Google reste le canal le plus rentable.\n\nSuite : tâche de suivi dans Projets (story *Suivi des budgets*), performances par canal dans Viz.\n"
+  }
+ ]
+}

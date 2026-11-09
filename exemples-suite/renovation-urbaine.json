@@ -1,0 +1,65 @@
+{
+ "format": "atelier-exemples/1",
+ "histoire": {
+  "id": "renovation-urbaine",
+  "titre": "Rénovation Urbaine 2026",
+  "sous_titre": "Suivi d'un chantier de réhabilitation",
+  "secteur": "Chantier",
+  "resume": "La réhabilitation d'un immeuble de logements à Villeurbanne : planning des lots, situations de travaux payées depuis le compte chantier, budget par lot ; le gros œuvre dépasse son enveloppe du mois."
+ },
+ "espace": {
+  "nom": "Rénovation Urbaine 2026",
+  "icone": "🏗️",
+  "description": "Comptes rendus de chantier, lots et procédures de réception."
+ },
+ "pages": [
+  {
+   "titre": "Parcours de l'exemple",
+   "parent": null,
+   "icone": "🧭",
+   "contenu": "La réhabilitation d'un immeuble de logements à Villeurbanne : planning des lots, situations de travaux payées depuis le compte chantier, budget par lot ; le gros œuvre dépasse son enveloppe du mois.\n\nCet exemple traverse toute la suite Atelier, avec les mêmes données d'une app à l'autre :\n\n1. **Atelier Convert** — Convertir les relevés. Convertissez le relevé de octobre 2026 (PDF) : les soldes sont contrôlés. « Envoyer dans Atelier Tab » le range dans le projet « Rénovation Urbaine 2026 » ; l'export CSV français part dans Trésorerie. Essayez aussi « Situations de travaux (CSV) ».\n2. **Atelier Tab** — Ranger et enrichir. Le projet « Rénovation Urbaine 2026 » réunit les opérations catégorisées et « Planning & Lots ».\n3. **Atelier Viz** — Analyser et surveiller. Le jeu des opérations alimente les graphiques ; l'alerte « Gros œuvre du mois » se déclenche : 16 000,00 € pour un seuil de 14 000,00 €.\n4. **Atelier Trésorerie** — Comparer au budget. Le compte « Compte chantier Rénovation Urbaine 2026 » et ses budgets de octobre 2026 : « Gros œuvre » est en dépassement.\n5. **Atelier Nexus** — Enchaîner et réagir. Les workflows de l'exemple enchaînent les apps en un lancement, chaque écriture attend « Autoriser » ; un déclencheur réagit à l'alerte de Viz.\n6. **Atelier Projets** — Suivre les actions. Le projet « Rénovation Urbaine 2026 » ; l'alerte devient une tâche dans la story « Suivi des budgets ».\n7. **Atelier Wiki** — Garder la mémoire. L'espace « Rénovation Urbaine 2026 » : parcours de l'exemple, bilans mensuels et procédures, reliés entre eux.\n\nBilans du trimestre : [[Bilans mensuels]].\n"
+  },
+  {
+   "titre": "Bilans mensuels",
+   "parent": null,
+   "icone": "📅",
+   "contenu": "Une page par mois, écrite à la clôture. Retour au [[Parcours de l'exemple]].\n"
+  },
+  {
+   "titre": "Bilan août 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 64 200,00 € |\n| Encaissements | 60 000,00 € |\n| Décaissements | 27 420,50 € |\n| Solde final | 96 779,50 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Charpente bois | 14 250,00 € |\n| Gros œuvre | 9 800,00 € |\n| Études et honoraires | 1 500,00 € |\n| Installation de chantier | 1 240,00 € |\n| Assurances | 612,50 € |\n| Banque | 18,00 € |\n\n## Point d'attention\n\n- [x] Gros œuvre : 9 800,00 €, sous le seuil de 14 000,00 €.\n"
+  },
+  {
+   "titre": "Bilan septembre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 96 779,50 € |\n| Encaissements | 45 000,00 € |\n| Décaissements | 32 570,50 € |\n| Solde final | 109 209,00 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Charpente bois | 14 250,00 € |\n| Gros œuvre | 11 200,00 € |\n| Électricité | 4 100,00 € |\n| Études et honoraires | 1 500,00 € |\n| Installation de chantier | 890,00 € |\n| Assurances | 612,50 € |\n| Banque | 18,00 € |\n\n## Point d'attention\n\n- [x] Gros œuvre : 11 200,00 €, sous le seuil de 14 000,00 €.\n"
+  },
+  {
+   "titre": "Bilan octobre 2026",
+   "parent": "Bilans mensuels",
+   "icone": "🧾",
+   "contenu": "| Indicateur | Montant |\n|---|---:|\n| Solde initial | 109 209,00 € |\n| Encaissements | 45 000,00 € |\n| Décaissements | 27 800,50 € |\n| Solde final | 126 408,50 € |\n\n## Dépenses par catégorie\n\n| Catégorie | Montant |\n|---|---:|\n| Gros œuvre | 16 000,00 € |\n| Menuiseries extérieures | 6 420,00 € |\n| Électricité | 2 270,00 € |\n| Études et honoraires | 1 500,00 € |\n| Installation de chantier | 980,00 € |\n| Assurances | 612,50 € |\n| Banque | 18,00 € |\n\n## Point d'attention\n\n- [ ] Gros œuvre : 16 000,00 € pour un seuil de 14 000,00 €. Suivi dans Projets (story de suivi des budgets).\n"
+  },
+  {
+   "titre": "Compte rendu de chantier n° 14",
+   "parent": null,
+   "icone": "📝",
+   "contenu": "Réunion du 22 octobre 2026, sur site.\n\n**Présents** : Marie Dubois (maîtrise d'œuvre), Karim Benali, Sophie Laurent, BTP Rhône, Élec Lumière.\n\n## Avancement\n- Gros œuvre : 70 %. Fondations de la cage B reprises (travaux supplémentaires, 3 400 € TTC, avenant à signer).\n- Charpente : terminée, réception partielle prononcée.\n- Électricité : passage des gaines au R+1 et R+2.\n\n## Décisions\n- [ ] Avenant fondations à valider avant le 12 novembre.\n- [ ] Menuiseries du Val : livraison des fenêtres le 18 novembre.\n\nVoir la [[Liste des lots]].\n"
+  },
+  {
+   "titre": "Liste des lots",
+   "parent": null,
+   "icone": "🧱",
+   "contenu": "| Lot | Entreprise | Montant HT |\n|---|---|---:|\n| Gros œuvre | BTP Rhône | 45 000 € |\n| Charpente bois | Charpentes du Beaujolais | 28 500 € |\n| Isolation thermique | à attribuer | 15 000 € |\n| Menuiseries extérieures | Menuiseries du Val | 21 400 € |\n| Électricité | Élec Lumière | 18 200 € |\n| Plomberie et chauffage | à attribuer | 16 800 € |\n\nRéception d'un lot : voir [[Procédure de réception]].\n"
+  },
+  {
+   "titre": "Procédure de réception",
+   "parent": null,
+   "icone": "✅",
+   "contenu": "1. Visite contradictoire avec l'entreprise et la maîtrise d'œuvre.\n2. Procès-verbal : réserves listées, délai de levée (30 jours en général).\n3. Retenue de garantie de 5 % jusqu'à la levée des réserves.\n4. Mettre à jour le statut du lot dans Tab (*Planning & Lots*), puis dans Projets.\n"
+  }
+ ]
+}

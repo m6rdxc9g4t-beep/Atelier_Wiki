@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Highlight } from '../components/CommandPalette.tsx'
 import { MOD_KEY } from '../components/Header.tsx'
 import { ErrorNotice, Skeleton, useUi } from '../components/ui.tsx'
+import { SuiteExamples } from '../components/SuiteExamples.tsx'
 import { useWiki } from '../components/WikiContext.tsx'
 import { api, pagePath, type PageSummary } from '../lib/api.ts'
 import { invalidateAll, useAsync, useTopic } from '../lib/data.ts'
@@ -114,6 +115,8 @@ export function HomeView() {
           </section>
         </div>
       </div>
+
+      <SuiteExamples />
     </div>
   )
 }

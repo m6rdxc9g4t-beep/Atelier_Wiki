@@ -4,7 +4,7 @@ import { diffLines } from 'diff'
 import { RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { Markdown } from '../components/Markdown.tsx'
+import { PageContent } from '../components/PageContent.tsx'
 import { ErrorNotice, Skeleton, useUi } from '../components/ui.tsx'
 import { api, pagePath } from '../lib/api.ts'
 import { invalidateAll, useAsync } from '../lib/data.ts'
@@ -139,7 +139,7 @@ export function HistoryView({ id, version }: { id: number; version: number | nul
               <h1 style={{ marginTop: 0 }}>
                 {current.data.icon} {current.data.title}
               </h1>
-              <Markdown content={current.data.content} spaceId={p.spaceId} preview />
+              <PageContent format={current.data.format} content={current.data.content} spaceId={p.spaceId} preview />
             </div>
           ) : (
             <>

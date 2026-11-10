@@ -1,4 +1,5 @@
-// Écriture d'une page (nouvelle ou existante) : Markdown à gauche, aperçu à droite.
+// Écriture d'une page (nouvelle ou existante) : Markdown ou LaTeX à gauche, aperçu à droite.
+// Le format se choisit par page ; les outils de mise en forme écrivent dans le langage choisi.
 // Brouillon gardé sur l'appareil à chaque frappe ; conflit détecté si quelqu'un a enregistré entre-temps.
 
 import {
@@ -20,28 +21,40 @@ import {
   PenLine,
   BookMarked,
   Sparkles,
+  Sigma,
+  ImageOff,
+  WandSparkles,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 
 import { AiDraftDialog } from '../components/AiDraftDialog.tsx'
-import { Markdown } from '../components/Markdown.tsx'
+import { PageContent } from '../components/PageContent.tsx'
 import { ErrorNotice, Skeleton, useUi } from '../components/ui.tsx'
 import { useWiki } from '../components/WikiContext.tsx'
 import { MOD_KEY } from '../components/Header.tsx'
-import { api, ApiError, pagePath, type PageDetail, type TitleEntry } from '../lib/api.ts'
+import { api, ApiError, pagePath, type PageDetail, type PageFormat, type TitleEntry } from '../lib/api.ts'
 import { invalidate, useAsync } from '../lib/data.ts'
 import { timeAgo } from '../lib/format.ts'
 import { normalizeTitle, openWikiLink } from '../lib/markdown.ts'
 import { navigate, onLinkClick, setLeaveGuard } from '../lib/router.ts'
+import { convertEmbeddedHtml, hasEmbeddedHtml, htmlToMarkdown, isRichHtml, OPENPROJECT_IMAGE_RE, openProjectImages } from '../lib/html-import.ts'
+import { continueItem, escapeLatex, LATEX_TABLE, latexAttachment, latexEnvironment } from '../lib/latex-edit.ts'
 import { caretPosition, continueList, insertText, prefixLines, wrap } from '../lib/textarea.ts'
 
 type Mode = 'write' | 'split' | 'preview'
+
+const MARKDOWN_PLACEHOLDER =
+  'Écris en Markdown.\n\n## Un titre de section\n- une liste\n$$E = mc^2$$ pour une formule.\n[[Une autre page]] pour faire un lien.\n\nColle ou glisse une image ici pour l’ajouter.'
+const LATEX_PLACEHOLDER =
+  'Écris en LaTeX (le corps du document suffit).\n\n\\section{Un titre de section}\n\\begin{itemize}\n  \\item une liste\n\\end{itemize}\n$E = mc^2$ pour une formule.\n[[Une autre page]] pour faire un lien.\n\nColle ou glisse une image ici pour l’ajouter.'
 const MODE_KEY = 'atelier-wiki:editor-mode'
 
 interface Draft {
   title: string
   icon: string
   content: string
+  /** Absent dans les brouillons d'avant le choix du format : Markdown. */
+  format?: PageFormat
   baseVersion: number | null
   savedAt: string
 }
@@ -99,6 +112,9 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
   const [title, setTitle] = useState(page?.title ?? initialTitle)
   const [icon, setIcon] = useState(page?.icon ?? '')
   const [content, setContent] = useState(page?.content ?? '')
+  const startFormat: PageFormat = page?.format ?? 'markdown'
+  const [format, setFormat] = useState<PageFormat>(startFormat)
+  const latex = format === 'latex'
   const [summary, setSummary] = useState('')
   const [baseVersion, setBaseVersion] = useState<number | null>(page?.version ?? null)
   const [mode, setMode] = useState<Mode>(() => {
@@ -118,13 +134,14 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
   const [found, setFound] = useState<Draft | null>(() => {
     const d = readDraft(pageId)
     if (!d) return null
-    const same = d.title === (page?.title ?? initialTitle) && d.content === (page?.content ?? '') && d.icon === (page?.icon ?? '')
+    const same =
+      d.title === (page?.title ?? initialTitle) && d.content === (page?.content ?? '') && d.icon === (page?.icon ?? '') && (d.format ?? 'markdown') === startFormat
     return same ? null : d
   })
   const area = useRef<HTMLTextAreaElement>(null)
   const titleInput = useRef<HTMLInputElement>(null)
 
-  const dirty = title !== (page?.title ?? initialTitle) || content !== (page?.content ?? '') || icon !== (page?.icon ?? '')
+  const dirty = title !== (page?.title ?? initialTitle) || content !== (page?.content ?? '') || icon !== (page?.icon ?? '') || format !== startFormat
   const space = spaces.find((s) => s.id === spaceId)
 
   useEffect(() => setCurrentSpaceId(spaceId), [spaceId, setCurrentSpaceId])
@@ -139,14 +156,14 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
     if (found) return
     const timer = setTimeout(() => {
       try {
-        if (dirty) localStorage.setItem(draftKey(pageId), JSON.stringify({ title, icon, content, baseVersion, savedAt: new Date().toISOString() } satisfies Draft))
+        if (dirty) localStorage.setItem(draftKey(pageId), JSON.stringify({ title, icon, content, format, baseVersion, savedAt: new Date().toISOString() } satisfies Draft))
         else clearDraft(pageId)
       } catch {
         /* stockage plein ou indisponible */
       }
     }, 400)
     return () => clearTimeout(timer)
-  }, [title, icon, content, baseVersion, dirty, pageId, found])
+  }, [title, icon, content, format, baseVersion, dirty, pageId, found])
 
   // Quitter avec des modifications non enregistrées : confirmation.
   const dirtyRef = useRef(dirty)
@@ -180,8 +197,8 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
       setError(null)
       try {
         const saved = page
-          ? await api.updatePage(page.id, { title, icon, content, baseVersion: overrideVersion ?? baseVersion ?? page.version, summary: summary || undefined })
-          : await api.createPage({ spaceId, parentId, title, icon, content })
+          ? await api.updatePage(page.id, { title, icon, content, format, baseVersion: overrideVersion ?? baseVersion ?? page.version, summary: summary || undefined })
+          : await api.createPage({ spaceId, parentId, title, icon, content, format })
         clearDraft(pageId)
         dirtyRef.current = false
         invalidate('tree', 'titles', 'home', 'page', 'spaces')
@@ -197,7 +214,7 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [saving, title, icon, content, baseVersion, summary, page, spaceId, parentId, pageId],
+    [saving, title, icon, content, format, baseVersion, summary, page, spaceId, parentId, pageId],
   )
 
   const cancel = () => {
@@ -214,7 +231,11 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
       try {
         const att = await api.upload(file, pageId)
         const label = att.name.replace(/[[\]]/g, '')
-        const md = att.isImage ? `![${label.replace(/\.[a-z0-9]+$/i, '')}](${att.url})` : `[📎 ${label}](${att.url})`
+        const md = latex
+          ? latexAttachment(att)
+          : att.isImage
+            ? `![${label.replace(/\.[a-z0-9]+$/i, '')}](${att.url})`
+            : `[📎 ${label}](${att.url})`
         if (area.current) insertText(area.current, md)
         else setContent((c) => `${c}\n${md}`)
       } catch (err) {
@@ -230,7 +251,56 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
     if (files.length) {
       e.preventDefault()
       void upload(files)
+      return
     }
+    // Texte mis en forme (page OpenProject, site web…) : converti en Markdown au lieu de perdre tableaux et titres.
+    // ⌘⇧V (coller sans mise en forme) ne fournit que le texte brut et n'est donc pas converti.
+    const html = e.clipboardData.getData('text/html')
+    if (!latex && html && isRichHtml(html)) {
+      const md = htmlToMarkdown(html)
+      if (!md) return
+      e.preventDefault()
+      insertText(e.currentTarget, md)
+      toast(`Mise en forme convertie en Markdown. Pour coller le texte brut : ${MOD_KEY} ⇧ V.`)
+    }
+  }
+
+  // ── Import depuis OpenProject : HTML resté dans le texte, images restées là-bas ──
+  const deferred = useDeferredValue(content)
+  const embeddedHtml = useMemo(() => !latex && hasEmbeddedHtml(deferred), [latex, deferred])
+  const foreignImages = useMemo(() => openProjectImages(deferred), [deferred])
+
+  const convertHtml = () => {
+    const el = area.current
+    const { text, blocks } = convertEmbeddedHtml(content)
+    if (!blocks) return
+    if (el) {
+      // Remplacement annulable (⌘Z) : tout le texte est sélectionné puis remplacé.
+      el.focus()
+      el.setSelectionRange(0, el.value.length)
+      insertText(el, text)
+      el.setSelectionRange(0, 0)
+      el.scrollTop = 0
+    } else setContent(text)
+    toast(`${blocks > 1 ? `${blocks} blocs convertis` : 'Bloc converti'} en Markdown : vérifie l’aperçu, puis enregistre.`)
+  }
+
+  /** Sélectionne la prochaine image OpenProject : coller une image la remplace. */
+  const findForeignImage = () => {
+    const el = area.current
+    if (!el) return
+    const value = el.value
+    const re = new RegExp(`!\\[[^\\]\\n]*\\]\\(\\s*[^)\\s]*?${OPENPROJECT_IMAGE_RE.source}[^)]*\\)|<img\\b[^>]*?${OPENPROJECT_IMAGE_RE.source}[^>]*>`, 'g')
+    const all = [...value.matchAll(re)]
+    if (!all.length) return
+    const next = all.find((m) => m.index! >= el.selectionEnd) ?? all[0]!
+    if (mode === 'preview') setModePersist('split')
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(next.index!, next.index! + next[0].length)
+      const line = value.slice(0, next.index).split('\n').length
+      el.scrollTop = Math.max(0, (line - 3) * parseFloat(getComputedStyle(el).lineHeight || '20'))
+    })
   }
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
@@ -302,11 +372,13 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
     const mod = e.metaKey || e.ctrlKey
     if (mod && e.key.toLowerCase() === 'b') {
       e.preventDefault()
-      wrap(el, '**', '**', 'texte en gras')
+      if (latex) wrap(el, '\\textbf{', '}', 'texte en gras')
+      else wrap(el, '**', '**', 'texte en gras')
     } else if (mod && e.key.toLowerCase() === 'i') {
       e.preventDefault()
-      wrap(el, '*', '*', 'texte en italique')
-    } else if (e.key === 'Enter' && !mod && !e.shiftKey && continueList(el)) {
+      if (latex) wrap(el, '\\emph{', '}', 'texte en italique')
+      else wrap(el, '*', '*', 'texte en italique')
+    } else if (e.key === 'Enter' && !mod && !e.shiftKey && (latex ? continueItem(el) : continueList(el))) {
       e.preventDefault()
     } else if (e.key === 'Tab' && !mod) {
       e.preventDefault()
@@ -356,6 +428,13 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
     }
   }
 
+  const changeFormat = (next: PageFormat) => {
+    if (next === format) return
+    setFormat(next)
+    if (content.trim()) toast(`Page passée en ${next === 'latex' ? 'LaTeX' : 'Markdown'} : le texte n’est pas converti, adapte-le si besoin.`)
+    requestAnimationFrame(() => area.current?.focus())
+  }
+
   const fileInput = useRef<HTMLInputElement>(null)
   const status = saving
     ? 'Enregistrement…'
@@ -395,6 +474,7 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
               setTitle(found.title)
               setIcon(found.icon)
               setContent(found.content)
+              setFormat(found.format ?? 'markdown')
               if (found.baseVersion !== null) setBaseVersion(found.baseVersion)
               setFound(null)
             }}
@@ -437,6 +517,33 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
         </div>
       )}
 
+      {embeddedHtml && (
+        <div className="notice notice--warning" style={{ marginBottom: '0.9rem' }}>
+          <TriangleAlert aria-hidden />
+          <div style={{ flex: 1 }}>
+            Ce texte contient du HTML (copié depuis OpenProject ?). Le Wiki ne l’affiche pas tel quel : convertis-le en Markdown pour
+            retrouver les tableaux, les titres et la mise en forme.
+          </div>
+          <button type="button" className="btn btn--sm btn--primary" onClick={convertHtml}>
+            <WandSparkles aria-hidden /> Convertir en Markdown
+          </button>
+        </div>
+      )}
+
+      {foreignImages.length > 0 && (
+        <div className="notice notice--warning" style={{ marginBottom: '0.9rem' }}>
+          <ImageOff aria-hidden />
+          <div style={{ flex: 1 }}>
+            {foreignImages.length > 1 ? `${foreignImages.length} images sont restées` : 'Une image est restée'} sur OpenProject : elle
+            {foreignImages.length > 1 ? 's ne s’afficheront' : ' ne s’affichera'} pas ici. Dans OpenProject, fais un clic droit sur l’image →
+            « Copier l’image », puis reviens ici : « Trouver » sélectionne l’emplacement, colle ({MOD_KEY} V) pour la remplacer.
+          </div>
+          <button type="button" className="btn btn--sm" onClick={findForeignImage}>
+            Trouver
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="notice notice--danger" role="alert" style={{ marginBottom: '0.9rem' }}>
           <TriangleAlert aria-hidden />
@@ -471,30 +578,77 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
       </div>
 
       <div className="editor__tools" role="toolbar" aria-label="Mise en forme">
-        {tool('Gras', <Bold />, (el) => wrap(el, '**', '**', 'texte en gras'), `${MOD_KEY} B`)}
-        {tool('Italique', <Italic />, (el) => wrap(el, '*', '*', 'texte en italique'), `${MOD_KEY} I`)}
-        {tool('Titre de section', <Heading2 />, (el) => prefixLines(el, '## '))}
+        <div className="segmented editor__format" role="group" aria-label="Langage de la page">
+          {(['markdown', 'latex'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={format === f}
+              onClick={() => changeFormat(f)}
+              title={f === 'latex' ? 'Écrire cette page en LaTeX' : 'Écrire cette page en Markdown'}
+            >
+              {f === 'latex' ? 'LaTeX' : 'Markdown'}
+            </button>
+          ))}
+        </div>
         <span className="sep" />
-        {tool('Liste à puces', <List />, (el) => prefixLines(el, '- '))}
-        {tool('Liste numérotée', <ListOrdered />, (el) => prefixLines(el, (i) => `${i + 1}. `))}
-        {tool('Cases à cocher', <ListChecks />, (el) => prefixLines(el, '- [ ] '))}
-        {tool('Citation', <Quote />, (el) => prefixLines(el, '> '))}
-        <span className="sep" />
-        {tool('Lien vers une page du wiki', <BookMarked />, (el) => {
-          wrap(el, '[[', ']]', 'Titre de la page')
-          requestAnimationFrame(updateSuggest)
-        })}
-        {tool('Lien externe', <Link />, (el) => {
-          const selected = el.value.slice(el.selectionStart, el.selectionEnd) || 'texte du lien'
-          insertText(el, `[${selected}](https://)`, [selected.length + 3, selected.length + 11])
-        })}
-        {tool('Code', <Code />, (el) => {
-          const selected = el.value.slice(el.selectionStart, el.selectionEnd)
-          if (selected.includes('\n')) wrap(el, '```\n', '\n```', '')
-          else wrap(el, '`', '`', 'code')
-        })}
-        {tool('Tableau', <Table />, (el) =>
-          insertText(el, `${el.selectionStart > 0 && el.value[el.selectionStart - 1] !== '\n' ? '\n\n' : ''}| Colonne | Colonne |\n|---|---|\n| | |\n`),
+        {latex ? (
+          <>
+            {tool('Gras', <Bold />, (el) => wrap(el, '\\textbf{', '}', 'texte en gras'), `${MOD_KEY} B`)}
+            {tool('Italique', <Italic />, (el) => wrap(el, '\\emph{', '}', 'texte en italique'), `${MOD_KEY} I`)}
+            {tool('Titre de section', <Heading2 />, (el) => wrap(el, '\\section{', '}', 'Titre de la section'))}
+            <span className="sep" />
+            {tool('Liste à puces', <List />, (el) => latexEnvironment(el, 'itemize', true, 'élément'))}
+            {tool('Liste numérotée', <ListOrdered />, (el) => latexEnvironment(el, 'enumerate', true, 'élément'))}
+            {tool('Citation', <Quote />, (el) => latexEnvironment(el, 'quote', false, 'citation'))}
+            {tool('Formule', <Sigma />, (el) => wrap(el, '$', '$', 'x^2'))}
+            <span className="sep" />
+            {tool('Lien vers une page du wiki', <BookMarked />, (el) => {
+              wrap(el, '[[', ']]', 'Titre de la page')
+              requestAnimationFrame(updateSuggest)
+            })}
+            {tool('Lien externe', <Link />, (el) => {
+              const selected = el.value.slice(el.selectionStart, el.selectionEnd) || escapeLatex('texte du lien')
+              insertText(el, `\\href{https://}{${selected}}`, [6, 14])
+            })}
+            {tool('Code', <Code />, (el) => {
+              const selected = el.value.slice(el.selectionStart, el.selectionEnd)
+              if (selected.includes('\n')) latexEnvironment(el, 'verbatim', false, 'code')
+              else wrap(el, '\\texttt{', '}', 'code')
+            })}
+            {tool('Tableau', <Table />, (el) =>
+              insertText(el, `${el.selectionStart > 0 && el.value[el.selectionStart - 1] !== '\n' ? '\n\n' : ''}${LATEX_TABLE}`),
+            )}
+          </>
+        ) : (
+          <>
+            {tool('Gras', <Bold />, (el) => wrap(el, '**', '**', 'texte en gras'), `${MOD_KEY} B`)}
+            {tool('Italique', <Italic />, (el) => wrap(el, '*', '*', 'texte en italique'), `${MOD_KEY} I`)}
+            {tool('Titre de section', <Heading2 />, (el) => prefixLines(el, '## '))}
+            <span className="sep" />
+            {tool('Liste à puces', <List />, (el) => prefixLines(el, '- '))}
+            {tool('Liste numérotée', <ListOrdered />, (el) => prefixLines(el, (i) => `${i + 1}. `))}
+            {tool('Cases à cocher', <ListChecks />, (el) => prefixLines(el, '- [ ] '))}
+            {tool('Citation', <Quote />, (el) => prefixLines(el, '> '))}
+            {tool('Formule', <Sigma />, (el) => wrap(el, '$$', '$$', 'x^2'))}
+            <span className="sep" />
+            {tool('Lien vers une page du wiki', <BookMarked />, (el) => {
+              wrap(el, '[[', ']]', 'Titre de la page')
+              requestAnimationFrame(updateSuggest)
+            })}
+            {tool('Lien externe', <Link />, (el) => {
+              const selected = el.value.slice(el.selectionStart, el.selectionEnd) || 'texte du lien'
+              insertText(el, `[${selected}](https://)`, [selected.length + 3, selected.length + 11])
+            })}
+            {tool('Code', <Code />, (el) => {
+              const selected = el.value.slice(el.selectionStart, el.selectionEnd)
+              if (selected.includes('\n')) wrap(el, '```\n', '\n```', '')
+              else wrap(el, '`', '`', 'code')
+            })}
+            {tool('Tableau', <Table />, (el) =>
+              insertText(el, `${el.selectionStart > 0 && el.value[el.selectionStart - 1] !== '\n' ? '\n\n' : ''}| Colonne | Colonne |\n|---|---|\n| | |\n`),
+            )}
+          </>
         )}
         {tool('Image ou fichier', <ImagePlus />, () => fileInput.current?.click())}
         <input
@@ -512,7 +666,8 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
           type="button"
           className="btn btn--ghost btn--sm ai-trigger"
           onClick={() => setAiOpen(true)}
-          title="Rédiger ou retravailler le texte avec l’IA locale (rien n’est enregistré sans toi)"
+          disabled={latex}
+          title={latex ? 'L’IA rédige en Markdown : passe la page en Markdown pour l’utiliser' : 'Rédiger ou retravailler le texte avec l’IA locale (rien n’est enregistré sans toi)'}
         >
           <Sparkles aria-hidden /> Rédiger avec l’IA
         </button>
@@ -560,8 +715,8 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
           onPaste={onPaste}
           spellCheck
           lang="fr"
-          aria-label="Contenu de la page (Markdown)"
-          placeholder={'Écris en Markdown.\n\n## Un titre de section\n- une liste\n[[Une autre page]] pour faire un lien.\n\nColle ou glisse une image ici pour l’ajouter.'}
+          aria-label={latex ? 'Contenu de la page (LaTeX)' : 'Contenu de la page (Markdown)'}
+          placeholder={latex ? LATEX_PLACEHOLDER : MARKDOWN_PLACEHOLDER}
         />
         {suggest && (
           <div className="suggest" role="listbox" aria-label="Pages du wiki" style={{ top: suggest.top, left: Math.max(8, suggest.left) }}>
@@ -595,7 +750,7 @@ function Editor({ page, spaceId, parentId, initialTitle }: EditorProps) {
           </div>
         )}
         <div className="editor__preview prose" aria-label="Aperçu">
-          {content.trim() ? <Markdown content={content} spaceId={spaceId} preview /> : <p className="muted">L’aperçu apparaît ici.</p>}
+          {content.trim() ? <PageContent format={format} content={content} spaceId={spaceId} preview /> : <p className="muted">L’aperçu apparaît ici.</p>}
         </div>
       </div>
 

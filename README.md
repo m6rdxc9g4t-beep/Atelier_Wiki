@@ -3,7 +3,10 @@
 Le wiki de la Suite Atelier : procédures, notes techniques, décisions et comptes rendus, rangés par espaces et reliés entre eux.
 
 - **Espaces et pages arborescentes** : chaque page peut avoir des sous-pages ; on les range par glisser-déposer dans la barre latérale ou avec « Déplacer ».
-- **Markdown** (tableaux, cases à cocher, code, images) avec un aperçu côte à côte pendant l'écriture.
+- **Markdown ou LaTeX, au choix pour chaque page** (sélecteur « Markdown / LaTeX » de l'éditeur), avec un aperçu côte à côte pendant l'écriture. Les outils de mise en forme écrivent dans le langage choisi.
+  - **Markdown** : tableaux, cases à cocher, code, images, formules `$$…$$` (KaTeX) et schémas Mermaid (bloc ` ```mermaid `).
+  - **LaTeX** : le corps du document suffit (un préambule `\documentclass … \begin{document}` est accepté). Sections, listes, tableaux `tabular`, figures avec `\includegraphics` et `\caption`, formules `$…$` et `$$…$$`, `\href`, `verbatim`. TikZ et les paquets particuliers ne sont pas rendus. Export en `.tex` compilable.
+- **Import depuis OpenProject (ou une page web)** : un texte mis en forme collé dans une page Markdown est converti en Markdown (titres, tableaux, gras, liens) ; `⌘ ⇧ V` colle le texte brut. Une page qui contient déjà du HTML collé propose « Convertir en Markdown ». Les images restées sur OpenProject (`/api/v3/attachments/…`) sont signalées : « Trouver » sélectionne leur emplacement, il suffit d'y coller l'image copiée depuis OpenProject.
 - **Liens entre pages** : `[[Titre de la page]]` ou `[[Titre|texte affiché]]`. Saisir `[[` propose les pages existantes ; un lien vers une page qui n'existe pas encore s'affiche en pointillés et la crée d'un clic. Chaque page liste les pages qui la citent.
 - **Historique complet** : chaque enregistrement garde une copie de la page ; on compare deux versions et on revient en arrière sans rien perdre.
 - **Recherche plein texte** (`⌘ K` ou `/`) dans les titres et le texte, accents ignorés.
@@ -55,10 +58,12 @@ Le Wiki tourne derrière le portail de la suite : Caddy vérifie la session (`fo
 
 ```
 backend/   Fastify + TypeScript + SQLite (better-sqlite3, recherche FTS5)
-  src/domain/     règles pures (liens [[…]], extraits, prompts de l’IA)
+  src/domain/     règles pures (liens [[…]], extraits, format Markdown/LaTeX, prompts de l’IA)
   src/services/   espaces, pages, historique, recherche, pièces jointes, événements, idempotence, nœud Atelier, IA (Ollama)
   src/routes/     routes minces : wiki.ts (interface), attachments.ts, atelier.ts (Nexus), ai.ts (rédaction assistée)
 frontend/  React + TypeScript + Vite, sans framework CSS
+  src/lib/latex.ts        rendu LaTeX (unified-latex → arbre nettoyé → KaTeX), chargé seulement par les pages LaTeX
+  src/lib/html-import.ts  conversion du HTML collé (OpenProject…) en Markdown (Turndown)
   src/styles/     copies verbatim du design system d'Atelier Projets + wiki-signature.css + wiki.css
   public/         atelier-theme.js (copie verbatim : préférence de thème de la suite), favicon
 ```
@@ -86,8 +91,8 @@ Manifeste : `GET /api/atelier/manifest`. Événements : `GET /api/atelier/events
 | `pages.search` | lecture | `POST /api/atelier/search` `{ query, space_id?, limit? }` → `atelier-table/1` |
 | `pages.list` | lecture | `GET /api/atelier/pages?space_id&updated_since&limit` → `atelier-table/1` |
 | `pages.get` | lecture | `GET /api/atelier/pages/{page_id}` → page complète (Markdown) |
-| `pages.create` | écriture, `Idempotency-Key` | `POST /api/atelier/pages` `{ title, content?, space_id?, parent_id?, icon? }` |
-| `pages.append` | écriture, `Idempotency-Key` | `POST /api/atelier/pages/{page_id}/append` `{ content, heading? }` |
+| `pages.create` | écriture, `Idempotency-Key` | `POST /api/atelier/pages` `{ title, content?, format?, space_id?, parent_id?, icon? }` (`format` : `markdown` par défaut, ou `latex`) |
+| `pages.append` | écriture, `Idempotency-Key` | `POST /api/atelier/pages/{page_id}/append` `{ content, heading? }` (titre en `## …` ou `\section*{…}` selon le format de la page) |
 | `pages.replace` | destructive | `PUT /api/atelier/pages/{page_id}` `{ content, title? }` (l'ancienne version reste dans l'historique) |
 
 Événements : `wiki.space.created`, `wiki.page.created`, `wiki.page.updated` (`fields`, `version`), `wiki.page.moved`, `wiki.page.deleted` (`pages`), `wiki.page.restored`. Ils ne contiennent jamais le texte des pages.

@@ -2,6 +2,7 @@
 
 import type { FastifyInstance } from 'fastify'
 
+import { latexDocument } from '../domain/format.js'
 import { slugify } from '../domain/markdown.js'
 import { ApiError } from '../http/errors.js'
 import { pageAttachments } from '../services/attachments.js'
@@ -95,6 +96,7 @@ export async function wikiRoutes(app: FastifyInstance): Promise<void> {
             title: { type: 'string' },
             content: { type: 'string' },
             icon: { type: 'string', maxLength: 32 },
+            format: { type: 'string', enum: ['markdown', 'latex'] },
             index: { type: 'integer', minimum: 0 },
           },
           required: ['spaceId', 'title'],
@@ -121,6 +123,7 @@ export async function wikiRoutes(app: FastifyInstance): Promise<void> {
             title: { type: 'string' },
             content: { type: 'string' },
             icon: { type: 'string', maxLength: 32 },
+            format: { type: 'string', enum: ['markdown', 'latex'] },
             baseVersion: { type: 'integer', minimum: 1 },
             summary: { type: 'string', maxLength: 500 },
           },
@@ -186,14 +189,15 @@ export async function wikiRoutes(app: FastifyInstance): Promise<void> {
     pageAttachments(db, idParam((request.params as { id: string }).id)),
   )
 
-  /** Export Markdown d'une page (titre en # puis contenu). */
+  /** Export d'une page dans son format : Markdown (titre en # puis contenu) ou document LaTeX compilable (.tex). */
   app.get('/api/pages/:id/export', { schema: { params: idSchema } }, async (request, reply) => {
     const page = getPage(db, idParam((request.params as { id: string }).id))
-    const file = `${slugify(page.title)}.md`
+    const latex = page.format === 'latex'
+    const file = `${slugify(page.title)}.${latex ? 'tex' : 'md'}`
     return reply
-      .header('Content-Type', 'text/markdown; charset=utf-8')
+      .header('Content-Type', latex ? 'application/x-tex; charset=utf-8' : 'text/markdown; charset=utf-8')
       .header('Content-Disposition', `attachment; filename="${file}"; filename*=UTF-8''${encodeURIComponent(file)}`)
-      .send(`# ${page.title}\n\n${page.content.replace(/\s+$/, '')}\n`)
+      .send(latex ? latexDocument(page.title, page.content) : `# ${page.title}\n\n${page.content.replace(/\s+$/, '')}\n`)
   })
 
   // ── Recherche ────────────────────────────────────────────────────────────

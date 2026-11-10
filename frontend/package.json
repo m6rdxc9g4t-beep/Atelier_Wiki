@@ -12,16 +12,31 @@
     "test": "node --import tsx --test --test-reporter=spec \"src/**/*.test.ts\""
   },
   "dependencies": {
+    "@joplin/turndown-plugin-gfm": "^1.0.68",
+    "@unified-latex/unified-latex-to-hast": "^1.8.4",
+    "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "diff": "^9.0.0",
+    "hast-util-sanitize": "^5.0.2",
+    "hast-util-to-jsx-runtime": "^2.3.7",
+    "katex": "^0.19.1",
     "lucide-react": "^1.61.0",
+    "mermaid": "^12.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "turndown": "^7.2.5",
+    "unified": "^11.0.5",
+    "vfile": "^6.0.3"
   },
   "devDependencies": {
+    "@types/hast": "^3.0.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react": "^6.1.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",

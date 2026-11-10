@@ -1,17 +1,20 @@
 // Coquille de l'application : en-tête, barre latérale, vue de l'adresse courante, recherche ⌘K, raccourcis.
 
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 
 import { CommandPalette } from './components/CommandPalette.tsx'
 import { AboutDialog, Topbar } from './components/Header.tsx'
 import { Sidebar } from './components/Sidebar.tsx'
-import { UiProvider } from './components/ui.tsx'
+import { Skeleton, UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
 import { navigate, useLocation, useRoute, type Route } from './lib/router.ts'
-import { EditPageView, NewPageView } from './views/EditorView.tsx'
 import { HistoryView } from './views/HistoryView.tsx'
 import { HomeView, NotFoundView, SearchView, SpaceView, TrashView } from './views/OtherViews.tsx'
 import { isTyping, PageView } from './views/PageView.tsx'
+
+// L'éditeur (outils, conversion du HTML collé) n'est chargé qu'à la première écriture : la lecture reste légère.
+const EditPageView = lazy(() => import('./views/EditorView.tsx').then((m) => ({ default: m.EditPageView })))
+const NewPageView = lazy(() => import('./views/EditorView.tsx').then((m) => ({ default: m.NewPageView })))
 
 function View({ route }: { route: Route }) {
   switch (route.name) {
@@ -22,11 +25,19 @@ function View({ route }: { route: Route }) {
     case 'page':
       return <PageView id={route.id} />
     case 'edit':
-      return <EditPageView id={route.id} />
+      return (
+        <Suspense fallback={<Skeleton />}>
+          <EditPageView id={route.id} />
+        </Suspense>
+      )
     case 'history':
       return <HistoryView id={route.id} version={route.version} />
     case 'new':
-      return <NewPageView spaceId={route.spaceId} parentId={route.parentId} title={route.title} />
+      return (
+        <Suspense fallback={<Skeleton />}>
+          <NewPageView spaceId={route.spaceId} parentId={route.parentId} title={route.title} />
+        </Suspense>
+      )
     case 'search':
       return <SearchView q={route.q} />
     case 'trash':

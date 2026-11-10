@@ -12,6 +12,9 @@ export interface Space {
   updatedAt: string
 }
 
+/** Langage d'écriture d'une page. */
+export type PageFormat = 'markdown' | 'latex'
+
 export interface PageSummary {
   id: number
   spaceId: number
@@ -19,6 +22,7 @@ export interface PageSummary {
   title: string
   slug: string
   icon: string
+  format: PageFormat
   position: number
   pinned: boolean
   version: number
@@ -76,6 +80,7 @@ export interface Revision {
   title: string
   icon: string
   content: string
+  format: PageFormat
   author: string
   summary: string
   createdAt: string
@@ -214,9 +219,9 @@ export const api = {
   titles: () => request<TitleEntry[]>('GET', '/api/titles'),
 
   page: (id: number) => request<PageDetail>('GET', `/api/pages/${id}`),
-  createPage: (input: { spaceId: number; parentId?: number | null; title: string; content?: string; icon?: string; index?: number }) =>
+  createPage: (input: { spaceId: number; parentId?: number | null; title: string; content?: string; icon?: string; format?: PageFormat; index?: number }) =>
     request<PageDetail>('POST', '/api/pages', input),
-  updatePage: (id: number, input: { title?: string; content?: string; icon?: string; baseVersion: number; summary?: string }) =>
+  updatePage: (id: number, input: { title?: string; content?: string; icon?: string; format?: PageFormat; baseVersion: number; summary?: string }) =>
     request<PageDetail>('PUT', `/api/pages/${id}`, input),
   movePage: (id: number, input: { spaceId?: number; parentId: number | null; index?: number }) => request<PageDetail>('POST', `/api/pages/${id}/move`, input),
   pin: (id: number, pinned: boolean) => request<PageDetail>('POST', `/api/pages/${id}/pin`, { pinned }),

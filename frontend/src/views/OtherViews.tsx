@@ -249,7 +249,7 @@ export function SearchView({ q }: { q: string }) {
       {hits.length > 0 && (
         <ul className="row-list">
           {hits.map((h) => (
-            <PageRow key={h.id} page={{ ...h, parentId: null, position: 0, pinned: false, version: 0, updatedBy: '' }} text={<Highlight text={h.snippet} />} side={h.spaceName} />
+            <PageRow key={h.id} page={{ ...h, format: 'markdown', parentId: null, position: 0, pinned: false, version: 0, updatedBy: '' }} text={<Highlight text={h.snippet} />} side={h.spaceName} />
           ))}
         </ul>
       )}

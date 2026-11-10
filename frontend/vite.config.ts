@@ -19,5 +19,11 @@ export default defineConfig({
     strictPort: true,
     proxy: { '/api': { target: apiTarget, changeOrigin: false } },
   },
-  build: { sourcemap: false, chunkSizeWarningLimit: 900 },
+  build: {
+    sourcemap: false,
+    // Le rendu LaTeX (analyseur + KaTeX) est un morceau à part, chargé seulement par les pages LaTeX.
+    chunkSizeWarningLimit: 1200,
+    // Polices (KaTeX) servies comme fichiers : la CSP du Wiki (font-src 'self') refuse les polices en data:.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
+  },
 })

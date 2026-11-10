@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { Markdown } from '../components/Markdown.tsx'
+import { PageContent } from '../components/PageContent.tsx'
 import { rememberVisit } from '../components/CommandPalette.tsx'
 import { MoveDialog } from '../components/MoveDialog.tsx'
 import { ErrorNotice, Skeleton, useDismiss, useUi } from '../components/ui.tsx'
@@ -26,7 +26,7 @@ import { useWiki } from '../components/WikiContext.tsx'
 import { api, ApiError, pagePath, type PageDetail } from '../lib/api.ts'
 import { invalidate, invalidateAll, useAsync, useTopic } from '../lib/data.ts'
 import { formatDate, formatSize, plural, timeAgo } from '../lib/format.ts'
-import { extractHeadings, toggleTask } from '../lib/markdown.ts'
+import { extractHeadings, toggleTask, type Heading } from '../lib/markdown.ts'
 import { navigate, onLinkClick } from '../lib/router.ts'
 
 export function isTyping(target: EventTarget | null): boolean {
@@ -72,7 +72,10 @@ export function PageView({ id }: { id: number }) {
 function PageBody({ page, setPage }: { page: PageDetail; setPage: (p: PageDetail) => void }) {
   const { toast, confirm } = useUi()
   const [moving, setMoving] = useState(false)
-  const headings = useMemo(() => extractHeadings(page.content), [page.content])
+  // Table des matières : lue dans le texte en Markdown, renvoyée par le rendu en LaTeX.
+  const [latexHeadings, setLatexHeadings] = useState<Heading[]>([])
+  const markdownHeadings = useMemo(() => (page.format === 'latex' ? [] : extractHeadings(page.content)), [page.format, page.content])
+  const headings = page.format === 'latex' ? latexHeadings : markdownHeadings
   const editPath = `${pagePath(page)}/modifier`
 
   useEffect(() => {
@@ -176,7 +179,7 @@ function PageBody({ page, setPage }: { page: PageDetail; setPage: (p: PageDetail
                   { icon: <History aria-hidden />, label: 'Historique', run: () => navigate(`${pagePath(page)}/historique`) },
                   { icon: <FolderInput aria-hidden />, label: 'Déplacer…', run: () => setMoving(true) },
                   { icon: <Link2 aria-hidden />, label: 'Copier le lien', run: copyLink },
-                  { icon: <Download aria-hidden />, label: 'Exporter en Markdown', run: () => (location.href = `/api/pages/${page.id}/export`) },
+                  { icon: <Download aria-hidden />, label: page.format === 'latex' ? 'Exporter en LaTeX (.tex)' : 'Exporter en Markdown', run: () => (location.href = `/api/pages/${page.id}/export`) },
                   { icon: <Trash2 aria-hidden />, label: 'Mettre à la corbeille…', run: trash, danger: true },
                 ]}
               />
@@ -191,12 +194,20 @@ function PageBody({ page, setPage }: { page: PageDetail; setPage: (p: PageDetail
             <a href={`${pagePath(page)}/historique`} onClick={(e) => onLinkClick(e, `${pagePath(page)}/historique`)} title={formatDate(page.updatedAt)}>
               {plural(page.version, 'version', 'versions')}
             </a>
+            {page.format === 'latex' && (
+              <>
+                {' '}
+                <span className="format-badge" title="Page écrite en LaTeX">
+                  LaTeX
+                </span>
+              </>
+            )}
           </p>
         </header>
 
         {page.content.trim() ? (
           <div className="prose">
-            <Markdown content={page.content} spaceId={page.spaceId} onToggleTask={toggleTaskAt} />
+            <PageContent format={page.format} content={page.content} spaceId={page.spaceId} onToggleTask={toggleTaskAt} onHeadings={setLatexHeadings} />
           </div>
         ) : (
           <div className="empty-page">

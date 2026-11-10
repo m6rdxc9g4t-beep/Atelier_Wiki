@@ -766,6 +766,18 @@ textarea.field {
 .page-meta a:hover {
   color: var(--app-text);
 }
+.format-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--app-line);
+  border-radius: var(--ds-radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--app-muted);
+  vertical-align: 1px;
+}
 .page-meta .btn {
   margin-left: 4px;
   vertical-align: middle;
@@ -1171,6 +1183,62 @@ textarea.field {
   border-radius: var(--ds-radius-md);
   border: 1px solid var(--app-line);
   cursor: zoom-in;
+}
+/* Figures (LaTeX \begin{figure}) : image centrée et sa légende. */
+.prose figure {
+  margin: 0 0 1em;
+  text-align: center;
+}
+.prose figcaption {
+  margin-top: 0.4em;
+  font-size: 13.5px;
+  color: var(--app-muted);
+}
+/* Formules (KaTeX) : une formule large défile au lieu de déborder de la page. */
+.prose .katex-display {
+  margin: 0 0 1em;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+.prose .katex {
+  font-size: 1.08em;
+}
+/* Schémas Mermaid : dessinés en SVG, affichés comme une image (agrandissable). */
+.prose .mermaid {
+  margin: 0 0 1em;
+  text-align: center;
+}
+.prose .mermaid img {
+  border: 0;
+  border-radius: 0;
+  max-height: 70vh;
+}
+.prose .mermaid--loading {
+  min-height: 120px;
+  border-radius: var(--ds-radius-md);
+  background: var(--surface-hover);
+}
+.prose .mermaid--error {
+  text-align: left;
+}
+/* Image restée sur OpenProject (collée avec la page) : emplacement à recompléter. */
+.foreign-image {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 1em;
+  padding: 14px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--ds-radius-md);
+  font-family: var(--ds-font-sans);
+  font-size: 13px;
+  color: var(--app-muted);
+}
+.foreign-image svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
 }
 
 /* ── Accueil ─────────────────────────────────────────────────────────────── */

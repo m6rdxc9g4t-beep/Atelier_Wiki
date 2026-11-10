@@ -1,6 +1,7 @@
 // Actions du nœud Atelier : délèguent aux services du Wiki et convertissent en snake_case / atelier-table/1.
 
 import type { Db } from '../db/database.js'
+import type { PageFormat } from '../domain/format.js'
 import { appendSection, slugify as slugOf } from '../domain/markdown.js'
 import { notFound } from '../http/errors.js'
 import { createPage, getPage, updatePage, type PageDetail } from './pages.js'
@@ -30,6 +31,7 @@ export function nodePage(page: PageDetail, publicUrl: string | null) {
     title: page.title,
     icon: page.icon,
     content: page.content,
+    format: page.format,
     space_id: String(page.spaceId),
     space: page.space.name,
     parent_id: page.parentId === null ? null : String(page.parentId),
@@ -178,13 +180,13 @@ function defaultSpaceId(db: Db): number {
 
 export function nodeCreatePage(
   db: Db,
-  input: { title: string; content?: string; space_id?: string; parent_id?: string; icon?: string },
+  input: { title: string; content?: string; format?: PageFormat; space_id?: string; parent_id?: string; icon?: string },
   user: string,
 ): PageDetail {
   let spaceId = input.space_id ? Number(input.space_id) : null
   const parentId = input.parent_id ? Number(input.parent_id) : null
   if (spaceId === null && parentId !== null) spaceId = getPage(db, parentId).spaceId
-  return createPage(db, { spaceId: spaceId ?? defaultSpaceId(db), parentId, title: input.title, content: input.content ?? '', icon: input.icon }, user)
+  return createPage(db, { spaceId: spaceId ?? defaultSpaceId(db), parentId, title: input.title, content: input.content ?? '', format: input.format, icon: input.icon }, user)
 }
 
 export function nodeAppend(db: Db, pageId: number, input: { content: string; heading?: string }, user: string): PageDetail {
@@ -192,7 +194,7 @@ export function nodeAppend(db: Db, pageId: number, input: { content: string; hea
   return updatePage(
     db,
     pageId,
-    { content: appendSection(page.content, input.content, input.heading), baseVersion: page.version, summary: input.heading ? `Ajout : ${input.heading}` : 'Ajout' },
+    { content: appendSection(page.content, input.content, input.heading, page.format), baseVersion: page.version, summary: input.heading ? `Ajout : ${input.heading}` : 'Ajout' },
     user,
   )
 }

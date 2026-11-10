@@ -1,5 +1,7 @@
 // Règles pures sur le texte des pages : liens internes, titres normalisés, extraits.
-// Le frontend applique les mêmes règles de liens (frontend/src/lib/wikilinks.ts).
+// Le frontend applique les mêmes règles de liens (frontend/src/lib/markdown.ts et frontend/src/lib/latex.ts).
+
+import { appendLatexSection, LATEX_PAGE_URL_RE, latexExcerpt, stripLatexCode, type PageFormat } from './format.js'
 
 /** Titre normalisé pour comparer : minuscules, sans accents, espaces réduits. */
 export function normalizeTitle(title: string): string {
@@ -37,9 +39,9 @@ export function stripCode(markdown: string): string {
   return markdown.replace(/```[\s\S]*?(```|$)/g, '').replace(/~~~[\s\S]*?(~~~|$)/g, '').replace(/`[^`\n]*`/g, '')
 }
 
-/** Liens sortants d'une page, sans doublon. */
-export function extractLinks(markdown: string): ExtractedLink[] {
-  const text = stripCode(markdown)
+/** Liens sortants d'une page, sans doublon. En LaTeX : [[…]] et \href{/p/12}{…}, hors verbatim et commentaires. */
+export function extractLinks(content: string, format: PageFormat = 'markdown'): ExtractedLink[] {
+  const text = format === 'latex' ? stripLatexCode(content) : stripCode(content)
   const seen = new Set<string>()
   const links: ExtractedLink[] = []
   for (const match of text.matchAll(WIKILINK_RE)) {
@@ -55,7 +57,7 @@ export function extractLinks(markdown: string): ExtractedLink[] {
       links.push(link)
     }
   }
-  for (const match of text.matchAll(PAGE_URL_RE)) {
+  for (const match of text.matchAll(format === 'latex' ? LATEX_PAGE_URL_RE : PAGE_URL_RE)) {
     const key = `${match[1]}|`
     if (!seen.has(key)) {
       seen.add(key)
@@ -65,8 +67,9 @@ export function extractLinks(markdown: string): ExtractedLink[] {
   return links
 }
 
-/** Texte brut court (aperçus des listes) : sans syntaxe Markdown. */
-export function excerpt(markdown: string, max = 180): string {
+/** Texte brut court (aperçus des listes) : sans syntaxe Markdown ni commandes LaTeX. */
+export function excerpt(markdown: string, max = 180, format: PageFormat = 'markdown'): string {
+  if (format === 'latex') return latexExcerpt(markdown, max)
   const text = stripCode(markdown)
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(WIKILINK_RE, (_m, title: string, label?: string) => (label ?? title).trim())
@@ -79,8 +82,9 @@ export function excerpt(markdown: string, max = 180): string {
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
 }
 
-/** Ajoute une section à la fin d'une page (action `pages.append`). */
-export function appendSection(content: string, addition: string, heading?: string | null): string {
+/** Ajoute une section à la fin d'une page (action `pages.append`) : `## Titre` en Markdown, `\section*{Titre}` en LaTeX. */
+export function appendSection(content: string, addition: string, heading?: string | null, format: PageFormat = 'markdown'): string {
+  if (format === 'latex') return appendLatexSection(content, addition, heading)
   const block = heading?.trim() ? `## ${heading.trim()}\n\n${addition.trim()}` : addition.trim()
   const base = content.replace(/\s+$/, '')
   return base ? `${base}\n\n${block}\n` : `${block}\n`

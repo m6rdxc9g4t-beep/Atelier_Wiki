@@ -45,7 +45,8 @@ export const SCHEMAS = {
     type: 'object',
     properties: {
       title: { type: 'string', minLength: 1, maxLength: 200 },
-      content: { type: 'string', maxLength: 2_000_000, description: 'Markdown.' },
+      content: { type: 'string', maxLength: 2_000_000, description: 'Texte de la page, dans le langage de `format`.' },
+      format: { type: 'string', enum: ['markdown', 'latex'], default: 'markdown', description: "Langage d'écriture : Markdown (défaut) ou LaTeX (corps du document)." },
       space_id: { ...id, description: 'Espace cible (défaut : le premier espace).' },
       parent_id: { ...id, description: 'Page parente (même espace).' },
       icon: { type: 'string', maxLength: 16, description: 'Émoji.' },
@@ -57,8 +58,8 @@ export const SCHEMAS = {
     type: 'object',
     properties: {
       page_id: id,
-      content: { type: 'string', minLength: 1, maxLength: 200_000, description: 'Markdown ajouté à la fin de la page.' },
-      heading: { type: 'string', maxLength: 200, description: 'Titre de section (## …) placé avant le texte ajouté.' },
+      content: { type: 'string', minLength: 1, maxLength: 200_000, description: 'Texte ajouté à la fin de la page, dans le langage de la page (Markdown ou LaTeX).' },
+      heading: { type: 'string', maxLength: 200, description: 'Titre de section placé avant le texte ajouté (## … en Markdown, \\section*{…} en LaTeX).' },
     },
     required: ['page_id', 'content'],
     additionalProperties: false,
@@ -67,7 +68,7 @@ export const SCHEMAS = {
     type: 'object',
     properties: {
       page_id: id,
-      content: { type: 'string', maxLength: 2_000_000, description: 'Nouveau contenu Markdown complet.' },
+      content: { type: 'string', maxLength: 2_000_000, description: 'Nouveau contenu complet, dans le langage de la page (Markdown ou LaTeX).' },
       title: { type: 'string', minLength: 1, maxLength: 200 },
     },
     required: ['page_id', 'content'],
@@ -85,6 +86,7 @@ const pageJson = {
       id: { type: 'string' },
       title: { type: 'string' },
       content: { type: 'string' },
+      format: { type: 'string', enum: ['markdown', 'latex'] },
       space_id: { type: 'string' },
       space: { type: 'string' },
       parent_id: { type: ['string', 'null'] },
@@ -171,7 +173,7 @@ export function manifest() {
       {
         id: 'pages.create',
         label: 'Créer une page',
-        description: 'Crée une page Markdown dans un espace, éventuellement sous une page parente.',
+        description: 'Crée une page (Markdown ou LaTeX) dans un espace, éventuellement sous une page parente.',
         kind: 'write',
         http: { method: 'POST', path: '/api/atelier/pages' },
         mcp_tool: null,

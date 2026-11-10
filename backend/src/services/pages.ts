@@ -1,8 +1,9 @@
-// Pages : arborescence par espace, contenu Markdown, versions (historique), liens et corbeille.
+// Pages : arborescence par espace, contenu Markdown ou LaTeX (`format`), versions (historique), liens et corbeille.
 // Toute écriture : une transaction qui met à jour la page, son index plein texte, ses liens, son historique
 // et émet l'événement atelier-node/1 correspondant.
 
 import type { Db } from '../db/database.js'
+import { isPageFormat, type PageFormat } from '../domain/format.js'
 import { excerpt, extractLinks, normalizeTitle, slugify } from '../domain/markdown.js'
 import { ApiError, conflict, invalid, notFound } from '../http/errors.js'
 import { emitEvents, type WikiEvent } from './events.js'
@@ -20,6 +21,7 @@ interface PageRow {
   title: string
   icon: string
   content: string
+  format: PageFormat
   position: number
   version: number
   pinned: number
@@ -39,6 +41,8 @@ export interface PageSummary {
   title: string
   slug: string
   icon: string
+  /** Langage d'écriture du contenu. */
+  format: PageFormat
   position: number
   pinned: boolean
   version: number
@@ -73,6 +77,7 @@ export const toSummary = (r: PageRow): PageSummary => ({
   title: r.title,
   slug: slugify(r.title),
   icon: r.icon,
+  format: r.format,
   position: r.position,
   pinned: r.pinned === 1,
   version: r.version,
@@ -107,19 +112,25 @@ function cleanContent(content: unknown): string {
 
 const cleanIcon = (icon: unknown) => String(icon ?? '').trim().slice(0, 16)
 
+function cleanFormat(format: unknown): PageFormat {
+  if (format === undefined || format === null || format === '') return 'markdown'
+  if (!isPageFormat(format)) throw invalid('Format inconnu : choisis « markdown » ou « latex ».')
+  return format
+}
+
 /** Index plein texte + liens sortants, recalculés à chaque écriture du contenu. */
-function index(db: Db, id: number, title: string, content: string): void {
+function index(db: Db, id: number, title: string, content: string, format: PageFormat): void {
   db.prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id)
   db.prepare('INSERT INTO pages_fts (rowid, title, content) VALUES (?, ?, ?)').run(id, title, content)
   db.prepare('DELETE FROM page_links WHERE source_id = ?').run(id)
   const insert = db.prepare('INSERT INTO page_links (source_id, target_id, target_title) VALUES (?, ?, ?)')
-  for (const link of extractLinks(content)) insert.run(id, link.targetId, link.targetTitle)
+  for (const link of extractLinks(content, format)) insert.run(id, link.targetId, link.targetTitle)
 }
 
-function saveRevision(db: Db, page: Pick<PageRow, 'id' | 'version' | 'title' | 'icon' | 'content'>, author: string, summary: string, at: string): void {
+function saveRevision(db: Db, page: Pick<PageRow, 'id' | 'version' | 'title' | 'icon' | 'content' | 'format'>, author: string, summary: string, at: string): void {
   db.prepare(
-    'INSERT INTO page_revisions (page_id, version, title, icon, content, author, summary, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-  ).run(page.id, page.version, page.title, page.icon, page.content, author, summary.trim().slice(0, 200), at)
+    'INSERT INTO page_revisions (page_id, version, title, icon, content, format, author, summary, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+  ).run(page.id, page.version, page.title, page.icon, page.content, page.format, author, summary.trim().slice(0, 200), at)
 }
 
 /** Enfants vivants d'un parent (null = racine de l'espace), dans l'ordre. */
@@ -187,7 +198,7 @@ export function backlinks(db: Db, page: Pick<PageRow, 'id' | 'title'>): (PageRef
 export function getPage(db: Db, id: number): PageDetail {
   const r = row(db, id)
   const space = getSpace(db, r.space_id)
-  const children = siblings(db, r.space_id, r.id).map((c) => ({ ...toSummary(c), excerpt: excerpt(c.content, 140) }))
+  const children = siblings(db, r.space_id, r.id).map((c) => ({ ...toSummary(c), excerpt: excerpt(c.content, 140, c.format) }))
   return {
     ...toSummary(r),
     content: r.content,
@@ -207,6 +218,8 @@ export interface CreatePageInput {
   title: string
   content?: string
   icon?: string
+  /** Langage d'écriture (défaut : markdown). */
+  format?: PageFormat
   /** Rang parmi les frères (défaut : à la fin). */
   index?: number
 }
@@ -215,6 +228,7 @@ export function createPage(db: Db, input: CreatePageInput, user: string, now = n
   const title = cleanTitle(input.title)
   const content = cleanContent(input.content)
   const icon = cleanIcon(input.icon)
+  const format = cleanFormat(input.format)
   return db.transaction(() => {
     getSpace(db, input.spaceId)
     const parentId = input.parentId ?? null
@@ -225,14 +239,14 @@ export function createPage(db: Db, input: CreatePageInput, user: string, now = n
     const at = now.toISOString()
     const { lastInsertRowid } = db
       .prepare(
-        `INSERT INTO pages (space_id, parent_id, title, icon, content, position, version, created_by, updated_by, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 0, 1, ?, ?, ?, ?)`,
+        `INSERT INTO pages (space_id, parent_id, title, icon, content, format, position, version, created_by, updated_by, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, 0, 1, ?, ?, ?, ?)`,
       )
-      .run(input.spaceId, parentId, title, icon, content, user, user, at, at)
+      .run(input.spaceId, parentId, title, icon, content, format, user, user, at, at)
     const id = Number(lastInsertRowid)
     placeAt(db, id, siblings(db, input.spaceId, parentId, id), input.index)
-    index(db, id, title, content)
-    saveRevision(db, { id, version: 1, title, icon, content }, user, 'Création', at)
+    index(db, id, title, content, format)
+    saveRevision(db, { id, version: 1, title, icon, content, format }, user, 'Création', at)
     emitEvents(
       db,
       [{
@@ -250,6 +264,7 @@ export interface UpdatePageInput {
   title?: string
   content?: string
   icon?: string
+  format?: PageFormat
   /** Version sur laquelle la modification a été faite : protège contre l'écrasement d'une modification concurrente. */
   baseVersion: number
   summary?: string
@@ -267,19 +282,21 @@ export function updatePage(db: Db, id: number, input: UpdatePageInput, user: str
     const title = input.title !== undefined ? cleanTitle(input.title) : current.title
     const content = input.content !== undefined ? cleanContent(input.content) : current.content
     const icon = input.icon !== undefined ? cleanIcon(input.icon) : current.icon
+    const format = input.format !== undefined ? cleanFormat(input.format) : current.format
     const fields = [
       title !== current.title && 'title',
       content !== current.content && 'content',
       icon !== current.icon && 'icon',
+      format !== current.format && 'format',
     ].filter((f): f is string => Boolean(f))
     if (fields.length === 0) return getPage(db, id)
 
     const version = current.version + 1
     const at = now.toISOString()
-    db.prepare('UPDATE pages SET title = ?, content = ?, icon = ?, version = ?, updated_by = ?, updated_at = ? WHERE id = ?').run(
-      title, content, icon, version, user, at, id,
+    db.prepare('UPDATE pages SET title = ?, content = ?, icon = ?, format = ?, version = ?, updated_by = ?, updated_at = ? WHERE id = ?').run(
+      title, content, icon, format, version, user, at, id,
     )
-    index(db, id, title, content)
+    index(db, id, title, content, format)
     // Cases cochées en série par la même personne : une seule entrée d'historique (la dernière), pas une par clic.
     if (input.summary === TASK_SUMMARY) {
       const last = db.prepare('SELECT id, author, summary, created_at FROM page_revisions WHERE page_id = ? ORDER BY version DESC LIMIT 1').get(id) as
@@ -289,7 +306,7 @@ export function updatePage(db: Db, id: number, input: UpdatePageInput, user: str
         db.prepare('DELETE FROM page_revisions WHERE id = ?').run(last.id)
       }
     }
-    saveRevision(db, { id, version, title, icon, content }, user, input.summary ?? '', at)
+    saveRevision(db, { id, version, title, icon, content, format }, user, input.summary ?? '', at)
     emitEvents(
       db,
       [{
@@ -504,7 +521,7 @@ export function recentPages(db: Db, limit = 12): (PageSummary & { excerpt: strin
          WHERE p.deleted_at IS NULL ORDER BY p.updated_at DESC, p.id DESC LIMIT ?`,
       )
       .all(limit) as (PageRow & { space_name: string })[]
-  ).map((r) => ({ ...toSummary(r), excerpt: excerpt(r.content, 140), spaceName: r.space_name }))
+  ).map((r) => ({ ...toSummary(r), excerpt: excerpt(r.content, 140, r.format), spaceName: r.space_name }))
 }
 
 export function pinnedPages(db: Db): (PageSummary & { spaceName: string })[] {
@@ -542,10 +559,12 @@ export function listRevisions(db: Db, pageId: number): RevisionSummary[] {
 
 export function getRevision(db: Db, pageId: number, version: number) {
   const r = db
-    .prepare('SELECT version, title, icon, content, author, summary, created_at FROM page_revisions WHERE page_id = ? AND version = ?')
-    .get(pageId, version) as { version: number; title: string; icon: string; content: string; author: string; summary: string; created_at: string } | undefined
+    .prepare('SELECT version, title, icon, content, format, author, summary, created_at FROM page_revisions WHERE page_id = ? AND version = ?')
+    .get(pageId, version) as
+    | { version: number; title: string; icon: string; content: string; format: PageFormat; author: string; summary: string; created_at: string }
+    | undefined
   if (!r) throw notFound('Version')
-  return { version: r.version, title: r.title, icon: r.icon, content: r.content, author: r.author, summary: r.summary, createdAt: r.created_at }
+  return { version: r.version, title: r.title, icon: r.icon, content: r.content, format: r.format, author: r.author, summary: r.summary, createdAt: r.created_at }
 }
 
 /** Remet une ancienne version : crée une NOUVELLE version identique à l'ancienne (l'historique ne perd rien). */
@@ -555,7 +574,7 @@ export function restoreRevision(db: Db, pageId: number, version: number, user: s
   return updatePage(
     db,
     pageId,
-    { title: old.title, content: old.content, icon: old.icon, baseVersion: current.version, summary: `Retour à la version ${version}` },
+    { title: old.title, content: old.content, icon: old.icon, format: old.format, baseVersion: current.version, summary: `Retour à la version ${version}` },
     user,
     now,
   )

@@ -7,7 +7,7 @@ import { dirname } from 'node:path'
 
 export type Db = Database.Database
 
-const MIGRATIONS: readonly string[] = [
+export const MIGRATIONS: readonly string[] = [
   // 1 — schéma initial
   `
   CREATE TABLE spaces (
@@ -109,6 +109,11 @@ const MIGRATIONS: readonly string[] = [
     space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     created_at TEXT NOT NULL
   );
+  `,
+  // 3 — format d'écriture de chaque page (et de chaque version) : Markdown ou LaTeX.
+  `
+  ALTER TABLE pages ADD COLUMN format TEXT NOT NULL DEFAULT 'markdown' CHECK (format IN ('markdown', 'latex'));
+  ALTER TABLE page_revisions ADD COLUMN format TEXT NOT NULL DEFAULT 'markdown' CHECK (format IN ('markdown', 'latex'));
   `,
 ]
 

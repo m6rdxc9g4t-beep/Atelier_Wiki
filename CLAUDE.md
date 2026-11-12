@@ -19,7 +19,7 @@ Consulte `README.md` pour les fonctions et les réglages. Le contrat commun de l
 ## Exemples de la suite
 
 - `exemples-suite/` (format `atelier-exemples/1`) est **généré** par Atelier_Deploy (`exemples/generer.py --vers <dossier des dépôts>`), jamais modifié à la main ici.
-- `services/exemples.ts` crée l'espace et les pages d'une histoire par `createSpace` / `createPage` (index, liens, historique, événements) ; l'espace est noté dans `suite_examples` (migration 2), seul supprimé par le retrait. Routes `GET/POST/DELETE /api/exemples-suite[/:histoire]`, réglage `WIKI_EXEMPLES_DIR`. Front : `components/SuiteExamples.tsx` (accueil).
+- `services/exemples.ts` crée l'espace et les pages d'une histoire par `createSpace` / `createPage` (index, liens, historique, événements) ; l'espace est noté dans `suite_examples` (migration 2), seul supprimé par le retrait. Routes `GET/POST/DELETE /api/exemples-suite[/:histoire]`, réglage `WIKI_EXEMPLES_DIR`. Front : `components/SuiteExamples.tsx` (fenêtre ouverte par « Exemples de la suite » au pied de la barre latérale, et carte de l'accueil tant que le wiki n'a aucune page).
 
 ## Méthode
 

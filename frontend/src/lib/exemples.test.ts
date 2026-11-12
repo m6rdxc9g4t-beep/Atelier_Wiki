@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
 import type { ExempleHistoire } from './api.ts'
-import { examplesStatus, pickHistoire, routeInSpace, showExamplesOnHome, spaceAfterRemoval } from './exemples.ts'
+import { examplesStatus, oneAtATime, pickHistoire, routeInSpace, showExamplesOnHome, spaceAfterRemoval } from './exemples.ts'
 import type { Route } from './router.ts'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
@@ -149,5 +149,52 @@ describe('exemples de la suite : après le retrait', () => {
     assert.equal(spaceAfterRemoval(spaces, null, 3), null)
     assert.equal(spaceAfterRemoval(spaces, 3, null), null)
     assert.equal(spaceAfterRemoval([{ id: 3 }], 3, 3), null)
+  })
+})
+
+describe('exemples de la suite : un bouton occupé garde le focus', () => {
+  /** Appel en attente, terminé à la demande. */
+  const pending = () => {
+    let settle: { resolve: () => void; reject: (e: Error) => void } | undefined
+    const promise = new Promise<void>((resolve, reject) => (settle = { resolve, reject }))
+    return { promise, resolve: () => settle?.resolve(), reject: (e: Error) => settle?.reject(e) }
+  }
+
+  it('une activation pendant qu’une action court est ignorée', async () => {
+    const run = oneAtATime()
+    const call = pending()
+    let started = 0
+    const action = () => {
+      started++
+      return call.promise
+    }
+    const first = run(action)
+    await run(action) // Entrée de nouveau sur le bouton resté focalisable : rien ne part
+    assert.equal(started, 1)
+    call.resolve()
+    await first
+    await run(async () => void started++)
+    assert.equal(started, 2, 'une fois l’action finie, la suivante part')
+  })
+
+  it('après un échec, le bouton répond de nouveau', async () => {
+    const run = oneAtATime()
+    const call = pending()
+    const first = run(() => call.promise)
+    call.reject(new Error('serveur en erreur'))
+    await assert.rejects(first, /serveur en erreur/)
+    let retried = false
+    await run(async () => void (retried = true))
+    assert.equal(retried, true)
+  })
+
+  it('les boutons de l’exemple ne sont jamais `disabled` (ils perdraient le focus) mais `aria-disabled`', () => {
+    const source = read('../components/SuiteExamples.tsx')
+    const actions = source.slice(source.indexOf('function StoryActions'), source.indexOf('const meta ='))
+    assert.equal(actions.split('<button').length - 1, 2, 'bouton principal et « Retirer »')
+    assert.doesNotMatch(actions, /\sdisabled=/)
+    assert.equal(actions.split('aria-disabled={ex.busy || undefined}').length - 1, 2)
+    const css = read('../styles/wiki.css')
+    assert.match(css, /\.btn\[aria-disabled=['"]true['"]\]/, 'même aspect qu’un bouton désactivé')
   })
 })

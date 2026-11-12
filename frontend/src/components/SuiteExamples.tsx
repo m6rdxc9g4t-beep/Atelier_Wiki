@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
 
 import { api, pagePath, type ExempleHistoire } from '../lib/api.ts'
 import { invalidateAll, useAsync } from '../lib/data.ts'
-import { examplesStatus, pickHistoire, routeInSpace, spaceAfterRemoval, type ExamplesStatus } from '../lib/exemples.ts'
+import { examplesStatus, oneAtATime, pickHistoire, routeInSpace, spaceAfterRemoval, type ExamplesStatus } from '../lib/exemples.ts'
 import { navigate, useRoute } from '../lib/router.ts'
 import { ErrorNotice, useUi } from './ui.tsx'
 import { useWiki } from './WikiContext.tsx'
@@ -64,6 +64,8 @@ function useSuiteExamples({ onOpened, inline = false }: { onOpened?: () => void;
   const list = useAsync(() => api.exemples(), [version])
   const [selected, setSelected] = useState<string | null>(remembered)
   const [busy, setBusy] = useState(false)
+  // Un bouton occupé reste focalisable (`aria-disabled`), donc activable : une seule action à la fois.
+  const [exclusive] = useState(oneAtATime)
   const { toast, confirm } = useUi()
   const { spaces, titles, currentSpace, setCurrentSpaceId } = useWiki()
   const route = useRoute()
@@ -93,7 +95,7 @@ function useSuiteExamples({ onOpened, inline = false }: { onOpened?: () => void;
     }
   }
 
-  const open = async () => {
+  const openStory = async () => {
     if (!h) return
     setBusy(true)
     setMessage(null)
@@ -111,7 +113,7 @@ function useSuiteExamples({ onOpened, inline = false }: { onOpened?: () => void;
     }
   }
 
-  const remove = async () => {
+  const removeStory = async () => {
     if (!h) return
     const ok = await confirm({
       title: `Retirer l’exemple « ${h.titre} » ?`,
@@ -140,7 +142,19 @@ function useSuiteExamples({ onOpened, inline = false }: { onOpened?: () => void;
     }
   }
 
-  return { status: examplesStatus(list), error: list.error, reload: list.reload, histoires, h, busy, choose, open, remove, primary, message }
+  return {
+    status: examplesStatus(list),
+    error: list.error,
+    reload: list.reload,
+    histoires,
+    h,
+    busy,
+    choose,
+    open: () => exclusive(openStory),
+    remove: () => exclusive(removeStory),
+    primary,
+    message,
+  }
 }
 
 function StorySelect({ ex, id, className }: { ex: SuiteExamplesState; id?: string; className: string }) {
@@ -177,10 +191,14 @@ function Story({ h }: { h: ExempleHistoire }) {
   )
 }
 
-/** Boutons de l'histoire. Le principal est à droite dans la fenêtre (à la fin), à gauche sur l'accueil (`primaryFirst`). */
+/**
+ * Boutons de l'histoire. Le principal est à droite dans la fenêtre (à la fin), à gauche sur l'accueil (`primaryFirst`).
+ * Pendant un appel ils sont `aria-disabled`, jamais `disabled` : le focus reste sur le bouton utilisé, qui répond
+ * de nouveau à Entrée si l'appel échoue (`oneAtATime` ignore une activation pendant l'appel).
+ */
 function StoryActions({ ex, h, primaryFirst = false }: { ex: SuiteExamplesState; h: ExempleHistoire; primaryFirst?: boolean }) {
   const primary = (
-    <button ref={ex.primary} type="button" className="btn btn--primary" disabled={ex.busy} onClick={() => void ex.open()}>
+    <button ref={ex.primary} type="button" className="btn btn--primary" aria-disabled={ex.busy || undefined} onClick={() => void ex.open()}>
       <BookOpen aria-hidden /> {h.charge ? 'Ouvrir l’exemple' : 'Charger l’exemple'}
     </button>
   )
@@ -188,7 +206,7 @@ function StoryActions({ ex, h, primaryFirst = false }: { ex: SuiteExamplesState;
     <>
       {primaryFirst && primary}
       {h.charge && (
-        <button type="button" className="btn" disabled={ex.busy} onClick={() => void ex.remove()}>
+        <button type="button" className="btn" aria-disabled={ex.busy || undefined} onClick={() => void ex.remove()}>
           <Trash2 aria-hidden /> Retirer
         </button>
       )}

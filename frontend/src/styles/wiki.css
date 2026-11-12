@@ -138,11 +138,15 @@ textarea {
 .btn:active {
   background: var(--surface-selected);
 }
-.btn:disabled {
+/* Occupé mais focalisable (`aria-disabled`) : même aspect qu'un bouton désactivé. */
+.btn:disabled,
+.btn[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.btn:disabled:hover {
+.btn:disabled:hover,
+.btn[aria-disabled="true"]:hover,
+.btn[aria-disabled="true"]:active {
   background: var(--app-surface);
 }
 .btn svg {
@@ -177,7 +181,9 @@ textarea {
 .btn--primary:active {
   background: var(--btn-primary-bg-hover);
 }
-.btn--primary:disabled:hover {
+.btn--primary:disabled:hover,
+.btn--primary[aria-disabled="true"]:hover,
+.btn--primary[aria-disabled="true"]:active {
   background: var(--btn-primary-bg);
 }
 .btn--danger {

@@ -60,3 +60,22 @@ export function spaceAfterRemoval(spaces: readonly { id: number }[], currentId: 
   if (removedId === null || currentId !== removedId) return null
   return spaces.find((s) => s.id !== removedId)?.id ?? null
 }
+
+/**
+ * Une action à la fois. Pendant un appel, les boutons de l'exemple restent focalisables (`aria-disabled`, jamais
+ * `disabled` : un bouton désactivé perd le focus, et après un échec plus rien ne répondait à Entrée) ; ils restent
+ * donc activables, et une activation pendant qu'une action court est ignorée. L'action suivante repart dès la fin
+ * de la précédente, réussie ou non.
+ */
+export function oneAtATime(): (action: () => Promise<void>) => Promise<void> {
+  let running = false
+  return async (action) => {
+    if (running) return
+    running = true
+    try {
+      await action()
+    } finally {
+      running = false
+    }
+  }
+}

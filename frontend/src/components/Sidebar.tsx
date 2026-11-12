@@ -1,4 +1,5 @@
-// Barre latérale : choix de l'espace, arbre des pages (glisser-déposer pour ranger), accueil et corbeille.
+// Barre latérale : choix de l'espace, arbre des pages (glisser-déposer pour ranger), accueil et corbeille ;
+// au pied, « Exemples de la suite » (comme dans les autres apps), l'auteur et le thème.
 
 import { Check, ChevronsUpDown, ChevronRight, FileText, Folder, FolderPlus, House, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
@@ -8,6 +9,7 @@ import { invalidate, invalidateAll, useAsync, useTopic } from '../lib/data.ts'
 import { plural } from '../lib/format.ts'
 import { navigate, onLinkClick, type Route } from '../lib/router.ts'
 import { Brand, SearchTrigger, SuiteSwitcher, ThemeSwitch, UserChip } from './Header.tsx'
+import { ExamplesIcon } from './SuiteExamples.tsx'
 import { useDismiss, useUi } from './ui.tsx'
 import { useWiki } from './WikiContext.tsx'
 
@@ -25,7 +27,14 @@ export function activePageId(route: Route): number | null {
   return route.name === 'page' || route.name === 'edit' || route.name === 'history' ? route.id : null
 }
 
-export function Sidebar({ route, onNavigate }: { route: Route; onNavigate: () => void }) {
+interface SidebarProps {
+  route: Route
+  onNavigate: () => void
+  /** Ouvre la fenêtre « Exemples de la suite » ; reçoit le bouton, à qui le focus reviendra. */
+  onOpenExamples: (opener: HTMLElement) => void
+}
+
+export function Sidebar({ route, onNavigate, onOpenExamples }: SidebarProps) {
   const { currentSpace } = useWiki()
   const treeVersion = useTopic('tree')
   const tree = useAsync(() => (currentSpace ? api.tree(currentSpace.id) : Promise.resolve([] as PageSummary[])), [currentSpace?.id, treeVersion])
@@ -134,6 +143,11 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate: () =>
             depth={0}
           />
         )}
+      </div>
+      <div className="side-extra">
+        <button type="button" className="nav-link" aria-haspopup="dialog" onClick={(e) => onOpenExamples(e.currentTarget)}>
+          <ExamplesIcon aria-hidden /> Exemples de la suite
+        </button>
       </div>
       <div className="sidebar__foot">
         <UserChip />

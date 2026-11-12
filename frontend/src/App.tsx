@@ -1,12 +1,14 @@
 // Coquille de l'application : en-tête, barre latérale, vue de l'adresse courante, recherche ⌘K, raccourcis.
 
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 
 import { CommandPalette } from './components/CommandPalette.tsx'
 import { AboutDialog, Topbar } from './components/Header.tsx'
 import { Sidebar } from './components/Sidebar.tsx'
+import { SuiteExamplesDialog } from './components/SuiteExamples.tsx'
 import { Skeleton, UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
+import { focusReturn, paletteShortcut } from './lib/dialogs.ts'
 import { navigate, useLocation, useRoute, type Route } from './lib/router.ts'
 import { HistoryView } from './views/HistoryView.tsx'
 import { HomeView, NotFoundView, SearchView, SpaceView, TrashView } from './views/OtherViews.tsx'
@@ -80,6 +82,21 @@ function Shell() {
   // Menu (écran étroit) refermé à chaque changement d'adresse.
   useEffect(() => setNavOpen(false), [key])
 
+  // « Exemples de la suite » : fenêtre ouverte depuis le pied de la barre latérale. À sa fermeture, le focus revient
+  // au bouton qui l'a ouverte ; si le tiroir du téléphone s'est refermé entre-temps (exemple ouvert), au bouton du menu.
+  const sidebar = useRef<HTMLElement>(null)
+  const navToggle = useRef<HTMLButtonElement>(null)
+  const [examples, setExamples] = useState<{ opener: HTMLElement; key: string } | null>(null)
+  const closeExamples = useCallback(() => setExamples(null), [])
+  const shownExamples = useRef(examples)
+  useEffect(() => {
+    const closed = shownExamples.current
+    shownExamples.current = examples
+    if (examples || !closed) return
+    const drawer = sidebar.current !== null && getComputedStyle(sidebar.current).position === 'fixed'
+    focusReturn<HTMLElement>({ opener: closed.opener, fallback: navToggle.current, drawer, moved: closed.key !== key })?.focus()
+  }, [examples, key])
+
   // N : nouvelle page dans l'espace courant (hors saisie et hors éditeur).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -98,17 +115,18 @@ function Shell() {
       <a className="sr-only" href="#contenu">
         Aller au contenu
       </a>
-      <aside className="sidebar" aria-label="Pages du wiki">
-        <Sidebar route={route} onNavigate={() => setNavOpen(false)} />
+      <aside ref={sidebar} className="sidebar" aria-label="Pages du wiki">
+        <Sidebar route={route} onNavigate={() => setNavOpen(false)} onOpenExamples={(opener) => setExamples({ opener, key })} />
       </aside>
       <div className="sidebar-backdrop" onClick={() => setNavOpen(false)} />
       <div className="main-col">
-        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} />
+        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} toggleRef={navToggle} />
         <main className="main" id="contenu">
           <View route={route} />
         </main>
       </div>
       <AboutDialog />
+      {examples && <SuiteExamplesDialog onClose={closeExamples} />}
     </div>
   )
 }
@@ -117,16 +135,13 @@ export function App() {
   const [palette, setPalette] = useState<string | null>(null)
   const openPalette = useCallback((initial = '') => setPalette(initial), [])
 
-  // ⌘K / Ctrl+K partout ; « / » hors saisie.
+  // ⌘K / Ctrl+K partout ; « / » hors saisie ; rien sous une fenêtre modale (règle : `paletteShortcut`).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setPalette((p) => (p === null ? '' : null))
-      } else if (e.key === '/' && !isTyping(e.target) && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault()
-        setPalette('')
-      }
+      const action = paletteShortcut(e, { typing: isTyping(e.target), modal: document.querySelector('dialog[open]') !== null })
+      if (!action) return
+      e.preventDefault()
+      setPalette((p) => (action === 'toggle' && p !== null ? null : ''))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

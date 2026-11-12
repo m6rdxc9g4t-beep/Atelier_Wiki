@@ -70,6 +70,17 @@ describe('exemples de la suite : où les proposer', () => {
     assert.match(dialog, /onCancel=/)
     assert.match(dialog, />\s*Fermer\s*</)
   })
+
+  it('la rangée d’actions de la fenêtre ne porte que des boutons (le texte « Espace · N pages » est dans le corps)', () => {
+    // Avec ce texte dans la rangée, les trois boutons d'un exemple chargé ne tenaient plus sur une ligne (560 px).
+    const source = read('../components/SuiteExamples.tsx')
+    const dialog = source.slice(source.indexOf('<dialog'), source.indexOf('</dialog>'))
+    const actions = dialog.indexOf('className="dialog__actions examples-dialog__actions"')
+    assert.ok(actions > 0, 'rangée d’actions absente de la fenêtre')
+    assert.doesNotMatch(dialog.slice(actions), /meta\(h\)/, 'pas de texte dans la rangée des boutons')
+    assert.match(dialog.slice(dialog.indexOf('className="dialog__body"'), actions), /meta\(h\)/, 'le texte reste affiché, dans le corps')
+    assert.doesNotMatch(read('../styles/wiki.css'), /\.examples-dialog__actions \.examples__meta/)
+  })
 })
 
 describe('exemples de la suite : histoire affichée et état de la liste', () => {

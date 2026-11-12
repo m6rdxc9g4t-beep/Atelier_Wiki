@@ -274,6 +274,8 @@ export function SuiteExamplesDialog({ onClose }: { onClose: () => void }) {
               <StorySelect ex={ex} id="examples-story" className="field" />
             </div>
             <Story h={h} />
+            {/* Dans le corps, jamais dans la rangée des boutons : avec ce texte, « Fermer », « Retirer » et le bouton principal ne tenaient plus sur une ligne. */}
+            <p className="examples__meta examples-dialog__meta">{meta(h)}</p>
           </>
         )}
         {/* Zone toujours présente : son contenu est annoncé quand il change. */}
@@ -282,7 +284,6 @@ export function SuiteExamplesDialog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="dialog__actions examples-dialog__actions">
-        {h && <span className="examples__meta">{meta(h)}</span>}
         <button type="button" className="btn" onClick={close}>
           Fermer
         </button>

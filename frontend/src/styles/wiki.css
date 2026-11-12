@@ -2314,18 +2314,15 @@ dialog.examples-dialog[open] {
 .examples-dialog__message--danger {
   color: var(--danger);
 }
+.examples-dialog__meta {
+  margin: 12px 0 0;
+}
+/* Rien que des boutons : les trois d'un exemple chargé tiennent sur une ligne dans la fenêtre de 560 px. */
 .examples-dialog__actions {
   flex-wrap: wrap;
   align-items: center;
 }
-.examples-dialog__actions .examples__meta {
-  flex: 1 1 auto;
-  min-width: 0;
-}
 @media (max-width: 560px) {
-  .examples-dialog__actions .examples__meta {
-    flex-basis: 100%;
-  }
   .examples-dialog__actions .btn {
     flex: 1 1 auto;
   }

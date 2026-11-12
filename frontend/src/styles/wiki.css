@@ -311,6 +311,15 @@ textarea.field {
   padding: 8px 8px 8px 12px;
   border-top: 1px solid var(--app-line);
 }
+/* Entrées du pied (« Exemples de la suite ») : sous le filet, au-dessus de l'auteur et du thème. */
+.side-extra {
+  padding: 6px 8px 0;
+  border-top: 1px solid var(--app-line);
+}
+.side-extra + .sidebar__foot {
+  min-height: 44px;
+  border-top: 0;
+}
 .sidebar-backdrop {
   display: none;
 }
@@ -2190,7 +2199,7 @@ dialog.ai-dialog[open] {
   }
 }
 
-/* ── Exemples de la suite (accueil) ──────────────────────────────────────── */
+/* ── Exemples de la suite (fenêtre du pied de la barre latérale, accueil d'un wiki sans page) ── */
 .examples {
   margin-top: 40px;
   padding-top: 20px;
@@ -2267,4 +2276,57 @@ dialog.ai-dialog[open] {
 .examples__meta {
   font-size: 12px;
   color: var(--app-muted);
+}
+
+/* Fenêtre : même contenu que la carte de l'accueil, dans le corps et les actions d'une fenêtre du Wiki. */
+dialog.examples-dialog {
+  width: min(560px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+dialog.examples-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.examples-dialog .dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.examples-dialog__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.examples-dialog__title svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--faint);
+}
+.examples-dialog .examples__text {
+  max-width: none;
+}
+.examples-dialog__message {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--app-muted);
+}
+.examples-dialog__message--danger {
+  color: var(--danger);
+}
+.examples-dialog__actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.examples-dialog__actions .examples__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 560px) {
+  .examples-dialog__actions .examples__meta {
+    flex-basis: 100%;
+  }
+  .examples-dialog__actions .btn {
+    flex: 1 1 auto;
+  }
 }

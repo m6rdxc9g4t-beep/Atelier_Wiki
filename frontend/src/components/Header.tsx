@@ -2,7 +2,7 @@
 // recherche (⌘K), choix du thème (préférence commune à la suite), auteur connecté, barre haute de la vue.
 
 import { Check, LayoutGrid, Menu, Monitor, Moon, Search, Sun } from 'lucide-react'
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 
 import { checkHealth, CURRENT_APP, PORTAL_URL, SUITE_APPS, type SuiteAppId } from '../lib/suite.ts'
 import { useTheme, type ThemePreference } from '../lib/theme.ts'
@@ -231,11 +231,20 @@ export function UserChip() {
 
 // ── Barre haute de la vue ───────────────────────────────────────────────────
 
-export function Topbar({ title, onToggleNav, navOpen }: { title: string; onToggleNav: () => void; navOpen: boolean }) {
+interface TopbarProps {
+  title: string
+  onToggleNav: () => void
+  navOpen: boolean
+  /** Bouton du menu (écran étroit) : repli du focus quand le tiroir s'est refermé. */
+  toggleRef?: RefObject<HTMLButtonElement | null>
+}
+
+export function Topbar({ title, onToggleNav, navOpen, toggleRef }: TopbarProps) {
   const { openPalette } = useWiki()
   return (
     <header className="topbar">
       <button
+        ref={toggleRef}
         type="button"
         className="btn btn--ghost btn--icon topbar__mobile"
         aria-label={navOpen ? 'Fermer le menu' : 'Ouvrir le menu'}

@@ -10,6 +10,7 @@ import { SuiteExamples } from '../components/SuiteExamples.tsx'
 import { useWiki } from '../components/WikiContext.tsx'
 import { api, pagePath, type PageSummary } from '../lib/api.ts'
 import { invalidateAll, useAsync, useTopic } from '../lib/data.ts'
+import { showExamplesOnHome } from '../lib/exemples.ts'
 import { formatDate, plural, timeAgo } from '../lib/format.ts'
 import { navigate, onLinkClick } from '../lib/router.ts'
 
@@ -116,7 +117,8 @@ export function HomeView() {
         </div>
       </div>
 
-      <SuiteExamples />
+      {/* Wiki sans page : l'accueil n'a rien d'autre à montrer. Sinon, l'entrée au pied de la barre latérale suffit. */}
+      {showExamplesOnHome(spaces) && <SuiteExamples />}
     </div>
   )
 }

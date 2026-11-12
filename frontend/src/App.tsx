@@ -8,7 +8,7 @@ import { Sidebar } from './components/Sidebar.tsx'
 import { SuiteExamplesDialog } from './components/SuiteExamples.tsx'
 import { Skeleton, UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
-import { focusReturn } from './lib/dialogs.ts'
+import { focusReturn, paletteShortcut } from './lib/dialogs.ts'
 import { navigate, useLocation, useRoute, type Route } from './lib/router.ts'
 import { HistoryView } from './views/HistoryView.tsx'
 import { HomeView, NotFoundView, SearchView, SpaceView, TrashView } from './views/OtherViews.tsx'
@@ -135,16 +135,13 @@ export function App() {
   const [palette, setPalette] = useState<string | null>(null)
   const openPalette = useCallback((initial = '') => setPalette(initial), [])
 
-  // ⌘K / Ctrl+K partout ; « / » hors saisie.
+  // ⌘K / Ctrl+K partout ; « / » hors saisie ; rien sous une fenêtre modale (règle : `paletteShortcut`).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setPalette((p) => (p === null ? '' : null))
-      } else if (e.key === '/' && !isTyping(e.target) && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault()
-        setPalette('')
-      }
+      const action = paletteShortcut(e, { typing: isTyping(e.target), modal: document.querySelector('dialog[open]') !== null })
+      if (!action) return
+      e.preventDefault()
+      setPalette((p) => (action === 'toggle' && p !== null ? null : ''))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)

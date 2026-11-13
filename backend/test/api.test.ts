@@ -79,6 +79,26 @@ describe('API du Wiki', () => {
     assert.equal(invalid.json().code, 'VALIDATION')
   })
 
+  it('accueil, recherche et liens entrants : titres et extraits en texte, jamais en balisage', async () => {
+    const spaces = (await app.inject(json('GET', '/api/spaces'))).json() as { id: number }[]
+    const content = '- [Taux Transfo &amp; Time to VI](#)\n- [NRJ &amp; Abs <br> Introduction](#)\n\n| A | B |\n|---|---|\n| R&amp;D | **oui** <br> non |\n'
+    const page = (await app.inject(json('POST', '/api/pages', { spaceId: spaces[0]!.id, title: 'Module Commerce & Ventes', content }))).json() as { id: number }
+    await app.inject(json('POST', '/api/pages', { spaceId: spaces[0]!.id, title: 'Sommaire', content: 'Voir [[Module Commerce & Ventes]].' }))
+
+    const text = 'Taux Transfo & Time to VI NRJ & Abs Introduction A B R&D oui non'
+    const home = (await app.inject(json('GET', '/api/home'))).json() as { recent: { title: string; excerpt: string }[] }
+    assert.equal(home.recent.find((p) => p.title === 'Module Commerce & Ventes')?.excerpt, text)
+
+    const hits = (await app.inject(json('GET', '/api/search?q=introduction'))).json() as { title: string; snippet: string }[]
+    assert.deepEqual(hits.map((h) => [h.title, h.snippet]), [['Module Commerce & Ventes', text.replace('Introduction', '\u0002Introduction\u0003')]])
+
+    const detail = (await app.inject(json('GET', `/api/pages/${page.id}`))).json() as { title: string; backlinks: { title: string }[] }
+    assert.equal(detail.title, 'Module Commerce & Ventes')
+    assert.deepEqual(detail.backlinks.map((b) => b.title), ['Sommaire'])
+    const titles = (await app.inject(json('GET', '/api/titles'))).json() as { title: string }[]
+    assert.ok(titles.some((t) => t.title === 'Module Commerce & Ventes'))
+  })
+
   it('cherche, exporte en Markdown, liste l’historique, la corbeille', async () => {
     const hits = (await app.inject(json('GET', '/api/search?q=bienvenue'))).json() as { title: string }[]
     assert.equal(hits[0]?.title, 'Bienvenue sur le Wiki')

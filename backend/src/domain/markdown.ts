@@ -67,19 +67,112 @@ export function extractLinks(content: string, format: PageFormat = 'markdown'): 
   return links
 }
 
-/** Texte brut court (aperçus des listes) : sans syntaxe Markdown ni commandes LaTeX. */
-export function excerpt(markdown: string, max = 180, format: PageFormat = 'markdown'): string {
-  if (format === 'latex') return latexExcerpt(markdown, max)
-  const text = stripCode(markdown)
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(WIKILINK_RE, (_m, title: string, label?: string) => (label ?? title).trim())
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '')
-    .replace(/^\s*\|?[-:| ]+\|?\s*$/gm, '')
-    .replace(/[*_~`|]/g, '')
+// ── Texte brut : extraits et résultats de recherche ─────────────────────────
+// Un extrait est du texte, jamais du HTML : entités décodées (« &amp; » → « & »), balises retirées (« <br> »),
+// syntaxe Markdown ou LaTeX retirée, espaces resserrés. Il est affiché tel quel (React l'échappe) et servi tel quel
+// au nœud Atelier (Hub, Nexus) : c'est ici qu'il est nettoyé, une fois, pas chez chaque lecteur.
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ensp: ' ', emsp: ' ', thinsp: ' ',
+  laquo: '«', raquo: '»', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', hellip: '…', ndash: '–', mdash: '—',
+  euro: '€', copy: '©', reg: '®', trade: '™', deg: '°', times: '×', divide: '÷', plusmn: '±', middot: '·', bull: '•',
+  rarr: '→', larr: '←', harr: '↔', le: '≤', ge: '≥', ne: '≠', micro: 'µ', para: '¶', sect: '§', oelig: 'œ', OElig: 'Œ',
+  eacute: 'é', egrave: 'è', ecirc: 'ê', euml: 'ë', agrave: 'à', acirc: 'â', ccedil: 'ç', ugrave: 'ù', ucirc: 'û',
+  icirc: 'î', iuml: 'ï', ocirc: 'ô', Eacute: 'É', Egrave: 'È', Agrave: 'À', Ccedil: 'Ç',
+}
+
+/** Entités HTML → caractères : nommées courantes, décimales (`&#233;`) et hexadécimales (`&#xE9;`). Une entité inconnue reste telle quelle. */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#[xX][0-9a-fA-F]{1,6}|#\d{1,7}|[a-zA-Z][a-zA-Z0-9]{1,11});/g, (match, body: string) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body] ?? match
+    const code = body[1] === 'x' || body[1] === 'X' ? Number.parseInt(body.slice(2), 16) : Number.parseInt(body.slice(1), 10)
+    // Jamais de caractère de contrôle (les marqueurs de la recherche en sont) ni de code hors d'Unicode.
+    if (!Number.isInteger(code) || code < 0x20 || (code >= 0x7f && code < 0xa0) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return ' '
+    return String.fromCodePoint(code)
+  })
+}
+
+/** Retire les balises HTML (`<br>`, `<span …>`, `</td>`, commentaires) : une espace à la place, le texte autour reste. */
+export function stripTags(text: string): string {
+  return text
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, ' ')
+    .replace(/<((?:https?|mailto):[^\s<>]+)>/g, '$1')
+    .replace(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, ' ')
+}
+
+/**
+ * Texte brut d'une page, sur une ligne. `code: 'keep'` garde le texte des blocs de code (recherche : ce qu'on y
+ * cherche doit pouvoir s'y montrer) ; par défaut ils sont retirés (aperçus).
+ */
+export function plainText(content: string, format: PageFormat = 'markdown', options: { code?: 'drop' | 'keep' } = {}): string {
+  // Caractères de contrôle retirés d'abord : les marqueurs des mots trouvés (recherche) en sont, une page ne peut pas en poser.
+  const text = content.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+  return format === 'latex' ? latexExcerpt(text, Number.POSITIVE_INFINITY) : markdownText(text, options.code === 'keep')
+}
+
+function markdownText(content: string, keepCode: boolean): string {
+  const source = keepCode ? content.replace(/^\s{0,3}(?:```|~~~)[^\n]*$/gm, '') : stripCode(content)
+  return decodeEntities(
+    stripTags(source)
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(WIKILINK_RE, (_m, title: string, label?: string) => (label ?? title).trim())
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '')
+      .replace(/^\s*(?:\[[ xX]\]\s+)/gm, '')
+      .replace(/^\s*\|?[-:| ]+\|?\s*$/gm, '')
+      .replace(/\\([\\`*_{}[\]()#+\-.!|<>~&])/g, '$1')
+      .replace(/[*_~`|]/g, ''),
+  )
     .replace(/\s+/g, ' ')
     .trim()
-  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
+}
+
+const truncate = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text)
+
+/** Texte brut court (aperçus des listes) : sans balises, entités, syntaxe Markdown ni commandes LaTeX. */
+export function excerpt(markdown: string, max = 180, format: PageFormat = 'markdown'): string {
+  return truncate(plainText(markdown, format), max)
+}
+
+/** Mot replié pour comparer comme l'index de recherche : sans accents, en minuscules. */
+const fold = (word: string) => word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
+/**
+ * Extrait d'un résultat de recherche, taillé dans le texte brut autour du premier mot trouvé ; chaque mot trouvé
+ * (début de mot, accents ignorés, comme l'index) est entouré de `start` / `end`. Sans mot trouvé dans le texte
+ * (titre seul, balisage) : le début de la page.
+ */
+export function searchExcerpt(plain: string, terms: string[], marks: { start: string; end: string }, max = 160): string {
+  const wanted = terms.flatMap((t) => fold(t).split(/[^\p{L}\p{N}]+/u)).filter(Boolean)
+  const hits: { from: number; to: number }[] = []
+  if (wanted.length) {
+    for (const m of plain.matchAll(/[\p{L}\p{N}]+/gu)) {
+      const word = fold(m[0])
+      if (wanted.some((w) => word.startsWith(w))) hits.push({ from: m.index, to: m.index + m[0].length })
+    }
+  }
+  let from = 0
+  const first = hits[0]
+  if (first && first.to > max - 20) {
+    // Le mot trouvé est loin : la fenêtre commence un peu avant lui, sur un début de mot.
+    from = Math.max(0, first.from - 50)
+    const space = plain.indexOf(' ', from)
+    if (from > 0 && space >= 0 && space < first.from) from = space + 1
+  }
+  let to = Math.min(plain.length, from + max)
+  if (to < plain.length) {
+    const space = plain.lastIndexOf(' ', to)
+    if (space > from + max / 2) to = space
+  }
+  let out = ''
+  let at = from
+  for (const hit of hits) {
+    if (hit.from < from || hit.to > to) continue
+    out += `${plain.slice(at, hit.from)}${marks.start}${plain.slice(hit.from, hit.to)}${marks.end}`
+    at = hit.to
+  }
+  out += plain.slice(at, to)
+  return `${from > 0 ? '…' : ''}${out.trim()}${to < plain.length ? '…' : ''}`
 }
 
 /** Ajoute une section à la fin d'une page (action `pages.append`) : `## Titre` en Markdown, `\section*{Titre}` en LaTeX. */

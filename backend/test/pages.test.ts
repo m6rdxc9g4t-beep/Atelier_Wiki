@@ -12,6 +12,7 @@ import {
   movePage,
   purgeExpiredTrash,
   purgePage,
+  recentPages,
   restorePage,
   restoreRevision,
   spaceTree,
@@ -193,6 +194,37 @@ describe('recherche', () => {
       assert.doesNotThrow(() => searchPages(db, nasty), nasty)
     }
     assert.deepEqual(searchPages(db, '   '), [])
+  })
+
+  it('sert des extraits en texte brut : ni entités, ni balises, ni morceaux de balisage', () => {
+    const db = openDatabase(':memory:')
+    const space = createSpace(db, { name: 'KPI CGO' }).id
+    const table = '| Indicateur | Remarque |\n|---|---|\n| Taux &amp; Temps | Voir **I - Dashboard** <br> puis II - PdC |\n| NRJ &amp; Abs | <br> à vérifier |\n'
+    createPage(db, { spaceId: space, title: 'Module Projet', content: `## Table des matières\n\n- [VI - Taux &amp; Temps <br> Introduction](#)\n\n${table}` }, 'x')
+    createPage(db, { spaceId: space, title: 'Types de tickets & OpenProject', content: 'Destinataires : stagiaires.' }, 'x')
+    createPage(db, { spaceId: space, title: 'Cours', format: 'latex', content: '\\section{Taux \\& Temps}\nLe \\textbf{taux} du mois.' }, 'x')
+
+    const clean = (q: string) => searchPages(db, q).map((h) => h.snippet.replaceAll('\u0002', '[').replaceAll('\u0003', ']'))
+    assert.deepEqual(clean('dashboard'), ['Table des matières VI - Taux & Temps Introduction Indicateur Remarque Taux & Temps Voir I - [Dashboard] puis II - PdC NRJ & Abs à vérifier'])
+    // Mots de l'index qui ne sont que du balisage (« amp », « br ») : la page est trouvée, l'extrait reste propre.
+    for (const markup of ['amp', 'br']) {
+      for (const snippet of clean(markup)) assert.doesNotMatch(snippet, /&amp;|amp;|<|>|\|/, `${markup} : ${snippet}`)
+    }
+    assert.deepEqual(clean('taux').sort(), ['Table des matières VI - [Taux] & Temps Introduction Indicateur Remarque [Taux] & Temps Voir I - Dashboard puis II - PdC NRJ & Abs à vérifier', '[Taux] & Temps Le [taux] du mois.'].sort())
+    // Titre avec « & » : servi tel quel, jamais « &amp; ».
+    assert.deepEqual(searchPages(db, 'openproject').map((h) => [h.title, h.snippet]), [['Types de tickets & OpenProject', 'Destinataires : stagiaires.']])
+  })
+
+  it('accueil et sous-pages : même texte brut', () => {
+    const db = openDatabase(':memory:')
+    const space = createSpace(db, { name: 'KPI CGO' }).id
+    const parent = createPage(db, { spaceId: space, title: 'Modules' }, 'x')
+    createPage(db, { spaceId: space, parentId: parent.id, title: 'Module Commerce & Ventes', content: '- [Taux Transfo &amp; Time to VI](#)\n- [NRJ &amp; Abs <br> Introduction](#)\n' }, 'x')
+    const expected = 'Taux Transfo & Time to VI NRJ & Abs Introduction'
+    const recent = recentPages(db).find((p) => p.title === 'Module Commerce & Ventes')
+    assert.equal(recent?.excerpt, expected)
+    const child = getPage(db, parent.id).children[0]
+    assert.deepEqual([child?.title, child?.excerpt], ['Module Commerce & Ventes', expected])
   })
 })
 

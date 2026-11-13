@@ -160,6 +160,28 @@ describe('barre latérale à la forme de Viz et de Tab', () => {
     assert.doesNotMatch(sidebar, /SuiteSwitcher/)
   })
 
+  it('un message garde son texte à côté de l’icône : jamais de texte nu dans un message', () => {
+    // Texte nu = élément anonyme de la ligne : avec « flex-wrap », il prend sa largeur entière et passe seul sous
+    // l'icône (vu sur le message d'un schéma Mermaid illisible). Le texte est donc toujours dans un « div » ou un « span ».
+    const sources = ['../components/Mermaid.tsx', '../components/Latex.tsx', '../components/AiDraftDialog.tsx', '../components/ui.tsx', '../views/EditorView.tsx']
+    let notices = 0
+    for (const file of sources) {
+      const lines = read(file).split('\n')
+      lines.forEach((line, i) => {
+        if (!/className=(?:"|\{`)notice notice--/.test(line)) return
+        notices++
+        assert.match(lines[i + 1] ?? '', /^\s*<[A-Z]\w* aria-hidden \/>$/, `${file}:${i + 2} : l’icône, seule sur sa ligne`)
+        assert.match(lines[i + 2] ?? '', /^\s*<(?:div|span)[ >]/, `${file}:${i + 3} : le texte dans un élément`)
+      })
+    }
+    assert.ok(notices >= 9, `${notices} messages relus`)
+    assert.match(read('../components/Mermaid.tsx'), /<span>Schéma Mermaid illisible : \{error\}<\/span>/)
+    const text = rule(css, '.notice > span')
+    assert.match(text, /flex: 1;/)
+    assert.match(text, /min-width: 0;/)
+    assert.match(text, /overflow-wrap: anywhere;/)
+  })
+
   it('un message avec action tient dans la page étroite du rail : l’action passe sous le texte', () => {
     assert.match(rule(css, '.notice'), /flex-wrap: wrap;/)
     assert.match(rule(css, '.notice > div'), /min-width: min\(100%, 200px\);/)

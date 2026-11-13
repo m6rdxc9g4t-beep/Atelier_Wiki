@@ -1882,7 +1882,9 @@ dialog.dialog::backdrop {
 }
 
 /* ── Messages ────────────────────────────────────────────────────────────── */
-/* Message + action : sur un écran étroit l'action passe sous le texte au lieu de l'écraser en colonne d'un mot. */
+/* Message + action : sur un écran étroit l'action passe sous le texte au lieu de l'écraser en colonne d'un mot.
+   Le texte est toujours dans un élément (« div » ou « span ») : posé nu à côté de l'icône, il prendrait sa largeur
+   entière et passerait seul à la ligne, sous l'icône. */
 .notice {
   display: flex;
   flex-wrap: wrap;
@@ -1919,6 +1921,11 @@ dialog.dialog::backdrop {
 }
 .notice > div {
   min-width: min(100%, 200px);
+}
+.notice > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 /* Un bouton secondaire prend l'encre ; le bouton principal garde son texte et son icône (blancs sur la signature). */
 .notice .btn:not(.btn--primary) {

@@ -62,11 +62,16 @@ describe('titres et extraits : du texte, jamais du balisage', () => {
     assert.equal(decodeEntities('R&D, AT&T ; &inconnue; a&#2;b'), 'R&D, AT&T ; &inconnue; a b')
   })
 
+  it('décode tout Latin-1 et l’alphabet grec, et jamais une propriété héritée d’un objet', () => {
+    assert.equal(decodeEntities('&Eacute;cart &times; 2 &frac12; &ouml; &alpha; &Omega; &sigmaf; &minus;5 &rArr; a&nbsp;b'), 'Écart × 2 ½ ö α Ω ς −5 ⇒ a b')
+    assert.equal(decodeEntities('&constructor; &toString; &valueOf;'), '&constructor; &toString; &valueOf;')
+  })
+
   it('partage la table des entités du backend (les deux côtés nettoient pareil)', () => {
-    const table = (source: string) => /const NAMED_ENTITIES: Record<string, string> = \{([\s\S]*?)\n\}/.exec(source)?.[1]?.replace(/\s+/g, ' ').trim()
+    const table = (source: string) => /const NAMED_ENTITIES: Record<string, string> = \{[\s\S]*?\n\}\n[\s\S]*?const ENTITY_RANGES[\s\S]*?\n\]\nfor [\s\S]*?\n\}\n/.exec(source)?.[0]?.replace(/\s+/g, ' ').trim()
     const front = table(readFileSync(new URL('./markdown.ts', import.meta.url), 'utf8'))
     const back = table(readFileSync(new URL('../../../backend/src/domain/markdown.ts', import.meta.url), 'utf8'))
-    assert.ok(front && front.includes("amp: '&'"))
+    assert.ok(front && front.includes("amp: '&'") && front.includes('eacute') && front.includes('omega'))
     assert.equal(front, back)
   })
 
@@ -94,8 +99,9 @@ describe('titres et extraits : du texte, jamais du balisage', () => {
   }
 
   it('donne aux titres la même ancre que le rendu de la page', () => {
-    const md = '## Taux &amp; Temps <br> Introduction\n\n## R&amp;D : **bilan** &#233;t&#xE9;\n\n### a<br>b\n'
+    const md = '## Taux &amp; Temps <br> Introduction\n\n## R&amp;D : **bilan** &#233;t&#xE9;\n\n### a<br>b\n\n## &Eacute;nergie &alpha; &times; &frac12; co&ucirc;t&nbsp;: mot&shy;coup&eacute; &rarr; fin\n'
     assert.deepEqual(extractHeadings(md).map((h) => h.id), renderedHeadings(md))
+    assert.equal(extractHeadings(md)[3]?.text, 'Énergie α × ½ coût : mot\u00adcoupé → fin')
   })
 
   it('« <br> » devient un saut de ligne dans une cellule de tableau ; toute autre balise reste du texte', () => {

@@ -55,6 +55,18 @@ describe('extraits : du texte, jamais du balisage', () => {
     assert.equal(decodeEntities('a&nbsp;b'), 'a b')
   })
 
+  it('décode tout Latin-1 et l’alphabet grec, pas seulement les entités les plus courantes', () => {
+    assert.equal(decodeEntities('&Eacute;cart &times; 2 &frac12; &ouml; &Ucirc; &szlig; &sup2; &yuml;'), 'Écart × 2 ½ ö Û ß ² ÿ')
+    assert.equal(decodeEntities('&alpha; &beta; &Omega; &sigmaf; &Sigma; &rho; &omega;'), 'α β Ω ς Σ ρ ω')
+    assert.equal(decodeEntities('&minus;5 &asymp; &infin; &rArr; &check;'), '−5 ≈ ∞ ⇒ ✓')
+    // Une entrée de la table l'emporte sur sa place dans Latin-1 : l'insécable devient une espace ordinaire.
+    assert.equal(decodeEntities('a&nbsp;b'), 'a b')
+  })
+
+  it('ne prend pas une propriété héritée d’un objet pour une entité', () => {
+    assert.equal(decodeEntities('&constructor; &toString; &valueOf; &__proto__;'), '&constructor; &toString; &valueOf; &__proto__;')
+  })
+
   it('ne laisse passer aucun caractère de contrôle par une entité numérique', () => {
     assert.equal(decodeEntities('a&#2;b&#x3;c&#0;d&#x110000;e'), 'a b c d e')
   })
@@ -64,6 +76,13 @@ describe('extraits : du texte, jamais du balisage', () => {
     assert.equal(stripTags('a<br/>b<BR />c').replace(/\s+/g, ' '), 'a b c')
     assert.equal(stripTags('<span style="color:red">Alerte</span> <!-- note --> fin').replace(/\s+/g, ' ').trim(), 'Alerte fin')
     assert.equal(stripTags('voir <https://exemple.fr/a?b=1> et 3 < 5 > 2'), 'voir https://exemple.fr/a?b=1 et 3 < 5 > 2')
+  })
+
+  it('ne retire que les éléments HTML : un texte entre chevrons qui n’en est pas un reste du texte', () => {
+    assert.equal(stripTags('Une liste Array<string> et Map<string, number>'), 'Une liste Array<string> et Map<string, number>')
+    assert.equal(excerpt('Crée la branche <nom de la branche> puis ouvre <ton dossier>/<projet>.'), 'Crée la branche <nom de la branche> puis ouvre <ton dossier>/<projet>.')
+    assert.equal(excerpt('a <b ou c> d, 3 <5 et x<y : <B>gras</B>, <font color="red">rouge</font><hr/>fin'), 'a d, 3 <5 et x<y : gras , rouge fin')
+    assert.equal(excerpt('<details><summary>Voir</summary>le détail</details> <img src=x onerror=alert(1)> <script>alert(1)</script>'), 'Voir le détail alert(1)')
   })
 
   it('« &amp; » et « <br> » d’une table des matières deviennent du texte', () => {

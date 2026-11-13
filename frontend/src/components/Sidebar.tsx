@@ -279,13 +279,22 @@ function SpacePicker() {
           ))}
           <div className="menu-sep" />
           <button type="button" role="menuitem" className="menu-item" onClick={create}>
-            <FolderPlus aria-hidden /> Nouvel espace…
+            <FolderPlus aria-hidden />
+            <span className="menu-item__body">
+              <span className="menu-item__text">Nouvel espace…</span>
+            </span>
           </button>
           <button type="button" role="menuitem" className="menu-item" onClick={rename}>
-            <Pencil aria-hidden /> Renommer cet espace…
+            <Pencil aria-hidden />
+            <span className="menu-item__body">
+              <span className="menu-item__text">Renommer cet espace…</span>
+            </span>
           </button>
           <button type="button" role="menuitem" className="menu-item" onClick={remove} disabled={spaces.length <= 1}>
-            <Trash2 aria-hidden /> Supprimer cet espace…
+            <Trash2 aria-hidden />
+            <span className="menu-item__body">
+              <span className="menu-item__text">Supprimer cet espace…</span>
+            </span>
           </button>
         </div>
       )}

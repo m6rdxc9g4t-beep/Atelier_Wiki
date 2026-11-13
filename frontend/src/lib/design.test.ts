@@ -135,6 +135,15 @@ describe('barre latérale à la forme de Viz et de Tab', () => {
     assert.match(rule(css, '.sidebar__scroll'), /overflow-x: hidden;/)
   })
 
+  it('abrège une entrée du menu des espaces plutôt que de la couper en deux lignes', () => {
+    // Avec la barre de défilement de Windows, le menu est plus étroit que ses libellés les plus longs.
+    for (const label of ['Nouvel espace…', 'Renommer cet espace…', 'Supprimer cet espace…']) {
+      assert.ok(sidebar.includes(`<span className="menu-item__text">${label}</span>`), label)
+    }
+    assert.match(rule(css, '.menu-item__text'), /overflow: hidden;\s*text-overflow: ellipsis;\s*white-space: nowrap;/)
+    assert.match(rule(css, '.menu-item__body'), /min-width: 0;/)
+  })
+
   it('devient un rail d’icônes sous 1024 px (comme Viz), le panneau complet s’ouvrant par-dessus (comme Tab)', () => {
     assert.ok(css.includes(`@media ${RAIL_QUERY} {`), 'wiki.css et lib/shell.ts doivent partager la même requête')
     assert.match(css, /--rail-w: 48px;/)

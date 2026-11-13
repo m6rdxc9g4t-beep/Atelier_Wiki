@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { nextTheme, panelShortcut, RAIL_MAX_WIDTH, RAIL_QUERY, TREE_INDENT_LEVELS, treeIndented } from './shell.ts'
+import { nextTheme, PANEL_LAYERS, panelCovers, panelShortcut, RAIL_MAX_WIDTH, RAIL_QUERY, TREE_INDENT_LEVELS, treeIndented } from './shell.ts'
 
 describe('coquille : rail d’icônes et panneau des pages', () => {
   it('le rail s’arrête juste sous 1024 px, comme dans Atelier Viz', () => {
@@ -23,6 +23,15 @@ describe('coquille : rail d’icônes et panneau des pages', () => {
 
   it('Échap est d’abord pour la fenêtre, la recherche ou le menu ouvert par-dessus', () => {
     assert.equal(panelShortcut({ key: 'Escape' }, { open: true, layered: true }), null)
+    // Les trois sont reconnus : fenêtre modale, recherche (⌘K), menu (espaces).
+    assert.deepEqual(PANEL_LAYERS.split(', '), ['dialog[open]', '.palette', '[role="menu"]'])
+  })
+
+  it('le panneau ouvert depuis le rail rend le reste de la page inerte, la barre complète jamais', () => {
+    assert.equal(panelCovers({ open: true, rail: true }), true)
+    assert.equal(panelCovers({ open: false, rail: true }), false)
+    assert.equal(panelCovers({ open: true, rail: false }), false)
+    assert.equal(panelCovers({ open: false, rail: false }), false)
   })
 })
 

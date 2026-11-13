@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
-import { RAIL_QUERY, TREE_INDENT_LEVELS, treeIndented } from './shell.ts'
+import { PANEL_LAYERS, RAIL_QUERY, TREE_INDENT_LEVELS, treeIndented } from './shell.ts'
 import { LEGACY_KEY, migrateLegacyPreference, SUITE_KEY, type ThemePreference } from './theme.ts'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
@@ -188,6 +188,35 @@ describe('barre latérale à la forme de Viz et de Tab', () => {
     assert.equal(indent, TREE_INDENT_LEVELS * step)
     const title = 232 - 1 - 2 * Number(padding[1]) - 17 - indent - before
     assert.ok(title >= 56, `il reste ${title} px au titre le plus décalé (au moins 56 px : sept ou huit caractères)`)
+  })
+
+  it('Échap dans la recherche ou un menu ne referme pas aussi le panneau : état lu avant la touche', () => {
+    const app = read('../App.tsx')
+    // Phase de capture, à l'ajout comme au retrait : la recherche (React) et les menus (capture sur le document)
+    // se referment en traitant la touche ; à la remontée ils ne sont plus dans la page.
+    assert.match(app, /window\.addEventListener\('keydown', onKey, true\)\s*return \(\) => window\.removeEventListener\('keydown', onKey, true\)\s*\}, \[navOpen\]\)/)
+    assert.match(app, /layered: document\.querySelector\(PANEL_LAYERS\) !== null/)
+    // Les repères de `PANEL_LAYERS` sont bien ceux que portent la recherche et le menu des espaces.
+    assert.ok(PANEL_LAYERS.includes('.palette') && read('../components/CommandPalette.tsx').includes('<div className="palette"'))
+    assert.ok(PANEL_LAYERS.includes('[role="menu"]') && sidebar.includes('<div role="menu" className="popover">'))
+  })
+
+  it('rend le focus à qui l’avait quand la recherche se referme (il ne sort pas du panneau resté ouvert)', () => {
+    const app = read('../App.tsx')
+    // Retenu avant l'ouverture, aux deux entrées : bouton « Rechercher… » (openPalette) et raccourcis clavier.
+    assert.equal(app.split('rememberFocus()\n').length - 1, 2)
+    assert.match(app, /if \(document\.querySelector\('\.palette'\)\) return/, 'Ctrl+K qui referme ne remplace pas le déclencheur retenu')
+    assert.match(app, /focusReturn<HTMLElement>\(\{ opener, fallback: null, hidden: opener\.getClientRects\(\)\.length === 0 \}\)\?\.focus\(\)\s*\}, \[paletteOpen\]\)/)
+  })
+
+  it('rend la page inerte tant que le panneau la couvre : Tab reste dans le panneau', () => {
+    const app = read('../App.tsx')
+    assert.match(app, /const covered = panelCovers\(\{ open: navOpen, rail \}\)/)
+    assert.match(app, /<div className="main-col" inert=\{covered\}>/)
+    assert.match(app, /<a className="sr-only" href="#contenu" inert=\{covered\}>/)
+    // Le panneau et son voile restent hors de la partie inerte.
+    assert.ok(app.indexOf('<aside ref={sidebar}') < app.indexOf('<div className="main-col"'))
+    assert.ok(app.indexOf('className="sidebar-backdrop"') < app.indexOf('<div className="main-col"'))
   })
 
   it('un message garde son texte à côté de l’icône : jamais de texte nu dans un message', () => {

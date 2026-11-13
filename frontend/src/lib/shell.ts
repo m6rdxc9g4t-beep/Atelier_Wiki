@@ -18,11 +18,26 @@ export function nextTheme(preference: ThemePreference): ThemePreference {
 }
 
 /**
+ * Ce qui, ouvert par-dessus le panneau, reçoit Échap avant lui : fenêtre modale, recherche (⌘K), menu.
+ * À lire **avant** que la touche ne soit traitée (écouteur en phase de capture) : la recherche et les menus se
+ * referment en la traitant, et ne seraient plus là pour dire que la touche était pour eux.
+ */
+export const PANEL_LAYERS = 'dialog[open], .palette, [role="menu"]'
+
+/**
  * Échap referme le panneau ouvert par-dessus la page — sauf si une fenêtre, la recherche ou un menu est ouvert :
  * la touche est alors pour eux (un menu du panneau se referme d'abord, le panneau à l'Échap suivant).
  */
 export function panelShortcut(e: { key: string }, state: { open: boolean; layered: boolean }): 'close' | null {
   return e.key === 'Escape' && state.open && !state.layered ? 'close' : null
+}
+
+/**
+ * Le panneau ouvert depuis le rail couvre la page (voile) : tant qu'il est ouvert, le reste de la page est inerte —
+ * Tab ne sort pas vers des liens cachés sous le voile, et rien n'y est activable. Barre complète (≥ 1024 px) : jamais.
+ */
+export function panelCovers(state: { open: boolean; rail: boolean }): boolean {
+  return state.open && state.rail
 }
 
 /**

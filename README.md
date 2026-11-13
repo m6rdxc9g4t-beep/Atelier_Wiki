@@ -9,7 +9,7 @@ Le wiki de la Suite Atelier : procédures, notes techniques, décisions et compt
 - **Import depuis OpenProject (ou une page web)** : un texte mis en forme collé dans une page Markdown est converti en Markdown (titres, tableaux, gras, liens) ; `⌘ ⇧ V` colle le texte brut. Une page qui contient déjà du HTML collé propose « Convertir en Markdown ». Les images restées sur OpenProject (`/api/v3/attachments/…`) sont signalées : « Trouver » sélectionne leur emplacement, il suffit d'y coller l'image copiée depuis OpenProject.
 - **Liens entre pages** : `[[Titre de la page]]` ou `[[Titre|texte affiché]]`. Saisir `[[` propose les pages existantes ; un lien vers une page qui n'existe pas encore s'affiche en pointillés et la crée d'un clic. Chaque page liste les pages qui la citent.
 - **Historique complet** : chaque enregistrement garde une copie de la page ; on compare deux versions et on revient en arrière sans rien perdre.
-- **Recherche plein texte** (`⌘ K` ou `/`) dans les titres et le texte, accents ignorés.
+- **Recherche plein texte** (`⌘ K` ou `/`) dans les titres et le texte, accents ignorés. Les extraits (accueil, sous-pages, résultats, nœud Atelier) sont du texte brut : ni balises, ni entités (`&amp;` se lit « & »), ni syntaxe Markdown ou LaTeX.
 - **Images et fichiers** : coller (`⌘ V`) ou glisser dans l'éditeur.
 - **Corbeille** de 30 jours, sous-pages comprises.
 - **Rédiger avec l’IA** : dans l’éditeur, l’IA locale (Ollama, sur le serveur de la suite) rédige une page à partir de tes consignes ou retravaille le texte actuel (compléter, reformuler, structurer, résumer). Tu relis l’aperçu, puis tu remplaces le texte ou l’ajoutes à la fin : rien n’est enregistré tant que tu n’as pas cliqué sur « Enregistrer ».
@@ -58,7 +58,7 @@ Le Wiki tourne derrière le portail de la suite : Caddy vérifie la session (`fo
 
 ```
 backend/   Fastify + TypeScript + SQLite (better-sqlite3, recherche FTS5)
-  src/domain/     règles pures (liens [[…]], extraits, format Markdown/LaTeX, prompts de l’IA)
+  src/domain/     règles pures (liens [[…]], extraits en texte brut, format Markdown/LaTeX, prompts de l’IA)
   src/services/   espaces, pages, historique, recherche, pièces jointes, événements, idempotence, nœud Atelier, IA (Ollama)
   src/routes/     routes minces : wiki.ts (interface), attachments.ts, atelier.ts (Nexus), ai.ts (rédaction assistée)
 frontend/  React + TypeScript + Vite, sans framework CSS
@@ -69,6 +69,8 @@ frontend/  React + TypeScript + Vite, sans framework CSS
 ```
 
 Charte v2 « Linear » de la suite (`Atelier_Deploy/DESIGN.md`) : structure commune à la suite, crème en clair (`#f8f4ec`) et bleu nuit en sombre (`#0b1220`), couleur signature **bleu `#007cbb`** pour l'accent seulement (bouton principal, sélection, focus, liens) et icône Lucide `book-open` (`frontend/src/styles/wiki-signature.css`). Police Inter embarquée (aucune requête réseau), base 13 px ; le texte des pages est composé un cran plus grand (15 px) pour la lecture. Le choix du thème (Système, Clair, Sombre) est commun à toute la suite (`frontend/public/atelier-theme.js`).
+
+La coquille a la forme de celles d'Atelier Viz et d'Atelier Tab : barre latérale de 232 px (marque, recherche, puis la zone qui défile — accueil, corbeille, espace, pages — et au pied « Exemples de la suite », l'auteur, le thème), barre haute de 44 px qui commence par le sélecteur « Suite Atelier ». Sous 1024 px, la barre devient un rail d'icônes de 48 px ; son bouton « Pages » ouvre le panneau complet par-dessus la page (Échap ou « Replier le panneau » le referme).
 
 ## Rédaction assistée (Ollama)
 

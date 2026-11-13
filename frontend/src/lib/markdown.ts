@@ -36,14 +36,42 @@ export interface Heading {
   id: string
 }
 
-/** Texte brut d'un titre Markdown (pour la table des matières). */
+// Mêmes entités que le backend (backend/src/domain/markdown.ts, table comparée par un test) : un titre « Taux &amp; Temps »
+// s'affiche « Taux & Temps » dans la page, donc aussi dans la table des matières et dans son ancre.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ensp: ' ', emsp: ' ', thinsp: ' ',
+  laquo: '«', raquo: '»', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', hellip: '…', ndash: '–', mdash: '—',
+  euro: '€', copy: '©', reg: '®', trade: '™', deg: '°', times: '×', divide: '÷', plusmn: '±', middot: '·', bull: '•',
+  rarr: '→', larr: '←', harr: '↔', le: '≤', ge: '≥', ne: '≠', micro: 'µ', para: '¶', sect: '§', oelig: 'œ', OElig: 'Œ',
+  eacute: 'é', egrave: 'è', ecirc: 'ê', euml: 'ë', agrave: 'à', acirc: 'â', ccedil: 'ç', ugrave: 'ù', ucirc: 'û',
+  icirc: 'î', iuml: 'ï', ocirc: 'ô', Eacute: 'É', Egrave: 'È', Agrave: 'À', Ccedil: 'Ç',
+}
+
+/** Entités HTML → caractères : nommées courantes, décimales et hexadécimales. Une entité inconnue reste telle quelle. */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#[xX][0-9a-fA-F]{1,6}|#\d{1,7}|[a-zA-Z][a-zA-Z0-9]{1,11});/g, (match, body: string) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body] ?? match
+    const code = body[1] === 'x' || body[1] === 'X' ? Number.parseInt(body.slice(2), 16) : Number.parseInt(body.slice(1), 10)
+    if (!Number.isInteger(code) || code < 0x20 || (code >= 0x7f && code < 0xa0) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return ' '
+    return String.fromCodePoint(code)
+  })
+}
+
+/** Saut de ligne écrit en HTML (`<br>`, `<br/>`, `<br />`) : la seule balise que le rendu comprend (remarkLineBreaks). */
+const LINE_BREAK_RE = /<br\s*\/?>/gi
+
+/** Texte brut d'un titre Markdown (pour la table des matières) : ce que le rendu affiche, sans syntaxe ni entités. */
 function plainInline(text: string): string {
-  return text
-    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
-    .replace(/\[\[([^\]]+)\]\]/g, '$1')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/[*_~`]/g, '')
-    .replace(/\s+#+\s*$/, '')
+  return decodeEntities(
+    text
+      .replace(LINE_BREAK_RE, ' ')
+      .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
+      .replace(/\[\[([^\]]+)\]\]/g, '$1')
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[*_~`]/g, '')
+      .replace(/\s+#+\s*$/, ''),
+  )
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
@@ -135,4 +163,48 @@ export function remarkFrenchSpacing() {
     node.children?.forEach(walk)
   }
   return (tree: MdNode) => walk(tree)
+}
+
+/**
+ * Greffon remark : `<br>` écrit dans le texte (cellule de tableau, liste, paragraphe) devient un vrai saut de ligne.
+ * C'est la seule balise comprise ; toute autre reste du texte affiché tel quel (aucun HTML n'est interprété).
+ */
+export function remarkLineBreaks() {
+  const walk = (node: MdNode) => {
+    if (!node.children) return
+    for (const child of node.children) {
+      if (child.type === 'html' && typeof child.value === 'string' && /^<br\s*\/?>$/i.test(child.value.trim())) {
+        child.type = 'break'
+        delete child.value
+      } else walk(child)
+    }
+  }
+  return (tree: MdNode) => walk(tree)
+}
+
+// ── Extraits de la recherche ─────────────────────────────────────────────────
+
+/** Marqueurs des mots trouvés dans un extrait (backend : services/search.ts). */
+const HIT_START = '\u0002'
+const HIT_END = '\u0003'
+
+/**
+ * Découpe un extrait en morceaux de texte, trouvés ou non. L'extrait est du texte : rien n'y est interprété, et un
+ * marqueur isolé (extrait coupé) est retiré plutôt qu'affiché.
+ */
+export function hitParts(snippet: string): { text: string; hit: boolean }[] {
+  const parts: { text: string; hit: boolean }[] = []
+  const clean = (text: string) => text.replaceAll(HIT_START, '').replaceAll(HIT_END, '')
+  const push = (text: string, hit: boolean) => {
+    const value = clean(text)
+    if (value) parts.push({ text: value, hit })
+  }
+  let last = 0
+  for (const m of snippet.matchAll(/\u0002([^\u0002\u0003]*)\u0003/g)) {
+    push(snippet.slice(last, m.index), false)
+    push(m[1]!, true)
+    last = m.index + m[0].length
+  }
+  push(snippet.slice(last), false)
+  return parts
 }

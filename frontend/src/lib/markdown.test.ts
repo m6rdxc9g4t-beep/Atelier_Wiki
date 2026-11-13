@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
-import { extractHeadings, frenchSpacing, openWikiLink, toggleTask, transformWikiLinks } from './markdown.ts'
+import remarkGfm from 'remark-gfm'
+import remarkParse from 'remark-parse'
+import { unified } from 'unified'
+
+import { decodeEntities, extractHeadings, frenchSpacing, hitParts, openWikiLink, remarkLineBreaks, slugify, toggleTask, transformWikiLinks } from './markdown.ts'
 
 describe('liens [[…]]', () => {
   it('transforme les liens hors du code', () => {
@@ -47,5 +52,84 @@ describe('typographie', () => {
   it('pose une espace fine insécable avant ; : ! ? et dans les guillemets', () => {
     assert.equal(frenchSpacing('Note : « Déplacer » ; oui !'), 'Note\u202f: «\u202fDéplacer\u202f»\u202f; oui\u202f!')
     assert.equal(frenchSpacing('http://exemple.fr:80'), 'http://exemple.fr:80')
+  })
+})
+
+// Cas relevés sur le wiki de l'utilisateur : « Taux &amp; Temps <br> Introduc… » affiché en clair.
+describe('titres et extraits : du texte, jamais du balisage', () => {
+  it('décode les entités comme le rendu de la page', () => {
+    assert.equal(decodeEntities('Taux &amp; Temps &#233;t&#xE9; &lt;br&gt;'), 'Taux & Temps été <br>')
+    assert.equal(decodeEntities('R&D, AT&T ; &inconnue; a&#2;b'), 'R&D, AT&T ; &inconnue; a b')
+  })
+
+  it('partage la table des entités du backend (les deux côtés nettoient pareil)', () => {
+    const table = (source: string) => /const NAMED_ENTITIES: Record<string, string> = \{([\s\S]*?)\n\}/.exec(source)?.[1]?.replace(/\s+/g, ' ').trim()
+    const front = table(readFileSync(new URL('./markdown.ts', import.meta.url), 'utf8'))
+    const back = table(readFileSync(new URL('../../../backend/src/domain/markdown.ts', import.meta.url), 'utf8'))
+    assert.ok(front && front.includes("amp: '&'"))
+    assert.equal(front, back)
+  })
+
+  it('la table des matières montre « & » et non « &amp; », sans « <br> », avec l’ancre du titre affiché', () => {
+    const md = '## Taux &amp; Temps <br> Introduction\n\n## NRJ &amp; Abs\n\n## Types de tickets & OpenProject\n\n## E-S&nbsp;: synthèse<br/>du mois\n'
+    assert.deepEqual(extractHeadings(md), [
+      { level: 2, text: 'Taux & Temps Introduction', id: 'taux-temps-introduction' },
+      { level: 2, text: 'NRJ & Abs', id: 'nrj-abs' },
+      { level: 2, text: 'Types de tickets & OpenProject', id: 'types-de-tickets-openproject' },
+      { level: 2, text: 'E-S : synthèse du mois', id: 'e-s-synthese-du-mois' },
+    ])
+  })
+
+  /** Texte d'un titre tel que le rendu le calcule pour son ancre : texte des nœuds, un saut de ligne valant une espace. */
+  function renderedHeadings(md: string): string[] {
+    interface Node {
+      type: string
+      value?: string
+      children?: Node[]
+    }
+    const processor = unified().use(remarkParse).use(remarkGfm).use(remarkLineBreaks)
+    const tree = processor.runSync(processor.parse(md)) as Node
+    const text = (node: Node): string => (node.type === 'break' ? ' ' : (node.value ?? (node.children ?? []).map(text).join('')))
+    return (tree.children ?? []).filter((n) => n.type === 'heading').map((n) => slugify(text(n)))
+  }
+
+  it('donne aux titres la même ancre que le rendu de la page', () => {
+    const md = '## Taux &amp; Temps <br> Introduction\n\n## R&amp;D : **bilan** &#233;t&#xE9;\n\n### a<br>b\n'
+    assert.deepEqual(extractHeadings(md).map((h) => h.id), renderedHeadings(md))
+  })
+
+  it('« <br> » devient un saut de ligne dans une cellule de tableau ; toute autre balise reste du texte', () => {
+    interface Node {
+      type: string
+      value?: string
+      children?: Node[]
+    }
+    const processor = unified().use(remarkParse).use(remarkGfm).use(remarkLineBreaks)
+    const md = '| A | B |\n|---|---|\n| R&amp;D | oui <br> non<BR/>peut-être <span>x</span> |\n'
+    const tree = processor.runSync(processor.parse(md)) as Node
+    const flat = (node: Node): Node[] => [node, ...(node.children ?? []).flatMap(flat)]
+    const nodes = flat(tree)
+    assert.equal(nodes.filter((n) => n.type === 'break').length, 2)
+    assert.deepEqual(nodes.filter((n) => n.type === 'html').map((n) => n.value), ['<span>', '</span>'])
+    assert.ok(nodes.some((n) => n.type === 'text' && n.value === 'R&D'), 'l’entité est décodée par le rendu')
+  })
+
+  it('découpe un extrait de recherche en texte et mots trouvés, sans jamais rien interpréter', () => {
+    assert.deepEqual(hitParts('Voir I - \u0002Dashboard\u0003 puis <b>II</b> &amp; fin'), [
+      { text: 'Voir I - ', hit: false },
+      { text: 'Dashboard', hit: true },
+      { text: ' puis <b>II</b> &amp; fin', hit: false },
+    ])
+    assert.deepEqual(hitParts('sans mot trouvé'), [{ text: 'sans mot trouvé', hit: false }])
+    assert.deepEqual(hitParts(''), [])
+  })
+
+  it('retire un marqueur isolé au lieu de l’afficher', () => {
+    assert.deepEqual(hitParts('début\u0003 et \u0002fin'), [{ text: 'début et fin', hit: false }])
+    assert.deepEqual(hitParts('\u0002a\u0003\u0002b\u0003 \u0002c'), [
+      { text: 'a', hit: true },
+      { text: 'b', hit: true },
+      { text: ' c', hit: false },
+    ])
   })
 })

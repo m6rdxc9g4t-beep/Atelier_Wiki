@@ -4,7 +4,7 @@ import { CornerDownLeft, FilePlus2, FileText, History, Search, TextSearch } from
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { api, pagePath, type SearchHit, type TitleEntry } from '../lib/api.ts'
-import { normalizeTitle, slugify } from '../lib/markdown.ts'
+import { hitParts, normalizeTitle, slugify } from '../lib/markdown.ts'
 import { navigate } from '../lib/router.ts'
 import { useWiki } from './WikiContext.tsx'
 
@@ -31,17 +31,7 @@ function recentVisits(titles: TitleEntry[]): TitleEntry[] {
 
 /** Extrait du serveur : passages trouvés entre \u0002 et \u0003 → <mark>. */
 export function Highlight({ text }: { text: string }) {
-  const parts: ReactNode[] = []
-  const re = /\u0002([\s\S]*?)\u0003/g
-  let last = 0
-  let i = 0
-  for (const m of text.matchAll(re)) {
-    if (m.index > last) parts.push(text.slice(last, m.index))
-    parts.push(<mark key={i++}>{m[1]}</mark>)
-    last = m.index + m[0].length
-  }
-  if (last < text.length) parts.push(text.slice(last))
-  return <>{parts}</>
+  return <>{hitParts(text).map((part, i) => (part.hit ? <mark key={i}>{part.text}</mark> : part.text))}</>
 }
 
 interface Item {

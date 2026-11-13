@@ -1,6 +1,7 @@
 // Rendu d'une page : Markdown (GFM) + liens [[…]] résolus, titres ancrés, code copiable, cases à cocher, images agrandissables,
-// formules $$…$$ (KaTeX). Aucun HTML brut n'est interprété (react-markdown ignore le HTML par défaut) : une page ne peut pas
-// injecter de script. Les éléments (liens, titres, images…) sont partagés avec le rendu LaTeX (useContentComponents).
+// formules $$…$$ (KaTeX). Aucun HTML brut n'est interprété (react-markdown l'affiche comme du texte) : une page ne peut pas
+// injecter de script. Seul « <br> » est compris, comme saut de ligne (remarkLineBreaks : un nœud du document, pas du HTML).
+// Les éléments (liens, titres, images…) sont partagés avec le rendu LaTeX (useContentComponents).
 
 import { Check, Copy, ImageOff } from 'lucide-react'
 import { isValidElement, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -10,7 +11,7 @@ import remarkMath from 'remark-math'
 import type { PluggableList } from 'unified'
 
 import { pagePath } from '../lib/api.ts'
-import { headingIds, normalizeTitle, remarkFrenchSpacing, slugify, transformWikiLinks, WIKI_SCHEME } from '../lib/markdown.ts'
+import { headingIds, normalizeTitle, remarkFrenchSpacing, remarkLineBreaks, slugify, transformWikiLinks, WIKI_SCHEME } from '../lib/markdown.ts'
 import { onLinkClick } from '../lib/router.ts'
 import { useWiki } from './WikiContext.tsx'
 
@@ -18,7 +19,8 @@ function textOf(node: ReactNode): string {
   if (node === null || node === undefined || typeof node === 'boolean') return ''
   if (typeof node === 'string' || typeof node === 'number') return String(node)
   if (Array.isArray(node)) return node.map(textOf).join('')
-  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children)
+  // Un saut de ligne dans un titre vaut une espace, comme dans la table des matières (lib/markdown.ts).
+  if (isValidElement(node)) return node.type === 'br' ? ' ' : textOf((node.props as { children?: ReactNode }).children)
   return ''
 }
 
@@ -209,7 +211,7 @@ export function Markdown({ content, spaceId, onToggleTask, preview }: MarkdownPr
   return (
     <>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, [remarkMath, MATH_OPTIONS], remarkFrenchSpacing]}
+        remarkPlugins={[remarkGfm, [remarkMath, MATH_OPTIONS], remarkLineBreaks, remarkFrenchSpacing]}
         rehypePlugins={rehypePlugins}
         components={components}
         urlTransform={urlTransform}

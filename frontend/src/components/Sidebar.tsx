@@ -10,6 +10,7 @@ import { api, pagePath, type PageSummary } from '../lib/api.ts'
 import { invalidate, invalidateAll, useAsync, useTopic } from '../lib/data.ts'
 import { plural } from '../lib/format.ts'
 import { navigate, onLinkClick, type Route } from '../lib/router.ts'
+import { treeIndented } from '../lib/shell.ts'
 import { Brand, SearchTrigger, ThemeSwitch, UserChip } from './Header.tsx'
 import { ExamplesIcon } from './SuiteExamples.tsx'
 import { useDismiss, useUi } from './ui.tsx'
@@ -333,8 +334,10 @@ function isDescendant(byId: Map<number, PageSummary>, id: number, ancestor: numb
 
 function TreeLevel(props: TreeProps) {
   const list = props.childrenOf.get(props.parentId) ?? []
+  // Retrait plafonné : un niveau très profond s'aligne sur le précédent au lieu de sortir de la barre.
+  const flat = props.depth > 0 && !treeIndented(props.depth)
   return (
-    <ul className="tree" role={props.depth === 0 ? 'tree' : 'group'} aria-labelledby={props.depth === 0 ? 'tree-label' : undefined}>
+    <ul className="tree" role={props.depth === 0 ? 'tree' : 'group'} aria-labelledby={props.depth === 0 ? 'tree-label' : undefined} data-flat={flat || undefined}>
       {list.map((page) => (
         <TreeNode key={page.id} page={page} {...props} />
       ))}

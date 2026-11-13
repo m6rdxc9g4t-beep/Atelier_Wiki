@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
-import { RAIL_QUERY } from './shell.ts'
+import { RAIL_QUERY, TREE_INDENT_LEVELS, treeIndented } from './shell.ts'
 import { LEGACY_KEY, migrateLegacyPreference, SUITE_KEY, type ThemePreference } from './theme.ts'
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
@@ -158,6 +158,36 @@ describe('barre latérale à la forme de Viz et de Tab', () => {
     const topbar = header.slice(header.indexOf('export function Topbar'))
     assert.ok(topbar.indexOf('<SuiteSwitcher />') > 0 && topbar.indexOf('<SuiteSwitcher />') < topbar.indexOf('topbar__title'))
     assert.doesNotMatch(sidebar, /SuiteSwitcher/)
+  })
+
+  it('garde la place d’un titre à toute profondeur de l’arbre : rien ne dépasse de la barre', () => {
+    const px = (declarations: string, property: string) => {
+      const found = new RegExp(`${property}: (\\d+)px`).exec(declarations)
+      assert.ok(found, `${property} absent`)
+      return Number(found[1])
+    }
+    // Retrait d'un niveau de sous-pages : marge, trait et retrait de la liste imbriquée.
+    const nested = rule(css, '.tree .tree')
+    const step = px(nested, 'margin-left') + px(nested, 'padding-left') + px(nested, 'border-left')
+    // Au-delà du plafond, la liste porte `data-flat` : plus de marge, de retrait ni de trait.
+    assert.match(rule(css, '.tree .tree[data-flat]'), /margin-left: 0;\s*padding-left: 0;\s*border-left: 0;/)
+    assert.match(sidebar, /const flat = props\.depth > 0 && !treeIndented\(props\.depth\)/)
+    assert.match(sidebar, /data-flat=\{flat \|\| undefined\}/)
+    // Place du titre dans la ligne la plus décalée d'un arbre de 12 niveaux, barre de défilement de Windows comprise
+    // (17 px) : barre de 232 px moins son trait, les marges de la zone, puis ce qui précède le titre dans la ligne.
+    const scroll = rule(css, '.sidebar__scroll')
+    const padding = /padding: \d+px (\d+)px/.exec(scroll)
+    assert.ok(padding, 'marges de la zone qui défile')
+    const toggle = rule(css, '.tree-toggle')
+    const link = rule(css, '.tree-link')
+    const linkPadding = /padding: 0 (\d+)px 0 (\d+)px;/.exec(link)
+    assert.ok(linkPadding, 'marges du lien')
+    const before = px(toggle, 'width') + px(toggle, 'margin-left') + Number(linkPadding[2]) + px(rule(css, '.tree-icon'), 'width') + px(link, 'gap') + Number(linkPadding[1])
+    let indent = 0
+    for (let depth = 1; depth <= 12; depth++) if (treeIndented(depth)) indent += step
+    assert.equal(indent, TREE_INDENT_LEVELS * step)
+    const title = 232 - 1 - 2 * Number(padding[1]) - 17 - indent - before
+    assert.ok(title >= 56, `il reste ${title} px au titre le plus décalé (au moins 56 px : sept ou huit caractères)`)
   })
 
   it('un message garde son texte à côté de l’icône : jamais de texte nu dans un message', () => {

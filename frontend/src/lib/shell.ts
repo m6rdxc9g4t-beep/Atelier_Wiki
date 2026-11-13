@@ -24,3 +24,15 @@ export function nextTheme(preference: ThemePreference): ThemePreference {
 export function panelShortcut(e: { key: string }, state: { open: boolean; layered: boolean }): 'close' | null {
   return e.key === 'Escape' && state.open && !state.layered ? 'close' : null
 }
+
+/**
+ * Arbre des pages : seuls les premiers niveaux de sous-pages sont décalés. Au-delà, le retrait ne grandit plus, pour
+ * qu'une ligne garde toujours la place de son titre dans les 232 px de la barre (rien n'y dépasse, rien n'y défile
+ * en largeur).
+ */
+export const TREE_INDENT_LEVELS = 4
+
+/** Niveau d'une liste de l'arbre (0 = racine de l'espace) : ses lignes sont-elles décalées par rapport au niveau parent ? */
+export function treeIndented(depth: number): boolean {
+  return depth >= 1 && depth <= TREE_INDENT_LEVELS
+}

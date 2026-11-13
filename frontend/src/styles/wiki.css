@@ -316,7 +316,7 @@ textarea.field {
   gap: 1px;
 }
 /* Zone du milieu : la seule qui défile. Jamais en largeur : rien n'y dépasse (le menu des espaces prend la largeur
-   de son bouton), et un arbre très profond est coupé plutôt que de faire naître une barre de défilement. */
+   de son bouton, le retrait de l'arbre est plafonné) ; « overflow-x: hidden » n'est qu'une garde. */
 .sidebar__scroll {
   flex: 1;
   min-height: 0;
@@ -640,6 +640,13 @@ textarea.field {
   margin-left: 15px;
   padding-left: 6px;
   border-left: 1px solid var(--app-line);
+}
+/* Retrait plafonné (`TREE_INDENT_LEVELS` de lib/shell.ts) : au-delà, un niveau s'aligne sur le précédent. Sans cela,
+   les lignes d'un arbre profond sortaient de la barre : titres invisibles, zone décalée par le focus du clavier. */
+.tree .tree[data-flat] {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
 }
 .tree-row {
   position: relative;

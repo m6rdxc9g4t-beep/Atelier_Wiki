@@ -1,14 +1,16 @@
-// Barre latérale : choix de l'espace, arbre des pages (glisser-déposer pour ranger), accueil et corbeille ;
-// au pied, « Exemples de la suite » (comme dans les autres apps), l'auteur et le thème.
+// Barre latérale, à la forme de celles d'Atelier Viz et d'Atelier Tab : marque en tête (44 px), recherche, puis la
+// zone qui défile — accueil, corbeille, choix de l'espace, arbre des pages (glisser-déposer pour ranger) — et, au
+// pied, « Exemples de la suite », l'auteur et le thème. Sous 1024 px elle devient un rail d'icônes (comme Viz) : le
+// bouton « Pages » ouvre alors le panneau complet par-dessus la page (le tiroir de Tab). L'en-tête et le pied ne défilent pas.
 
-import { Check, ChevronsUpDown, ChevronRight, FileText, Folder, FolderPlus, House, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronsUpDown, ChevronRight, FileText, Folder, FolderPlus, House, ListTree, PanelLeftClose, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 
 import { api, pagePath, type PageSummary } from '../lib/api.ts'
 import { invalidate, invalidateAll, useAsync, useTopic } from '../lib/data.ts'
 import { plural } from '../lib/format.ts'
 import { navigate, onLinkClick, type Route } from '../lib/router.ts'
-import { Brand, SearchTrigger, SuiteSwitcher, ThemeSwitch, UserChip } from './Header.tsx'
+import { Brand, SearchTrigger, ThemeSwitch, UserChip } from './Header.tsx'
 import { ExamplesIcon } from './SuiteExamples.tsx'
 import { useDismiss, useUi } from './ui.tsx'
 import { useWiki } from './WikiContext.tsx'
@@ -29,12 +31,16 @@ export function activePageId(route: Route): number | null {
 
 interface SidebarProps {
   route: Route
+  /** Le panneau complet est ouvert par-dessus la page (rail d'icônes, sous 1024 px). */
+  panelOpen: boolean
+  onOpenPanel: () => void
+  onClosePanel: () => void
   onNavigate: () => void
   /** Ouvre la fenêtre « Exemples de la suite » ; reçoit le bouton, à qui le focus reviendra. */
   onOpenExamples: (opener: HTMLElement) => void
 }
 
-export function Sidebar({ route, onNavigate, onOpenExamples }: SidebarProps) {
+export function Sidebar({ route, panelOpen, onOpenPanel, onClosePanel, onNavigate, onOpenExamples }: SidebarProps) {
   const { currentSpace } = useWiki()
   const treeVersion = useTopic('tree')
   const tree = useAsync(() => (currentSpace ? api.tree(currentSpace.id) : Promise.resolve([] as PageSummary[])), [currentSpace?.id, treeVersion])
@@ -85,67 +91,85 @@ export function Sidebar({ route, onNavigate, onOpenExamples }: SidebarProps) {
     saveExpanded(next)
   }
 
+  const navLink = (current: boolean) => `nav-link${current ? ' atelier-nav-active' : ''}`
+
   return (
     <>
       <div className="side-head">
-        <SuiteSwitcher />
         <Brand />
+        <button type="button" className="btn btn--ghost btn--icon side-close" data-panel-close aria-label="Replier le panneau" title="Replier le panneau" onClick={onClosePanel}>
+          <PanelLeftClose />
+        </button>
       </div>
       <div className="side-search">
         <SearchTrigger />
       </div>
-      <nav className="side-nav" aria-label="Navigation">
-        <a className="nav-link" href="/" aria-current={route.name === 'home' ? 'page' : undefined} onClick={(e) => (onLinkClick(e, '/'), onNavigate())}>
-          <House aria-hidden /> Accueil
-        </a>
-        <a
-          className="nav-link"
-          href="/corbeille"
-          aria-current={route.name === 'trash' ? 'page' : undefined}
-          onClick={(e) => (onLinkClick(e, '/corbeille'), onNavigate())}
-        >
-          <Trash2 aria-hidden /> Corbeille
-        </a>
-      </nav>
       <div className="sidebar__scroll">
-        <SpacePicker />
-        <div className="tree-head">
-          <span id="tree-label">Pages</span>
-          {currentSpace && (
-            <a
-              className="btn btn--ghost btn--icon btn--sm"
-              href={`/nouvelle?espace=${currentSpace.id}`}
-              title="Nouvelle page (N)"
-              aria-label="Nouvelle page dans cet espace"
-              onClick={(e) => {
-                onLinkClick(e, `/nouvelle?espace=${currentSpace.id}`)
-                onNavigate()
-              }}
-            >
-              <Plus />
-            </a>
+        <nav className="side-nav" aria-label="Navigation">
+          <a className={navLink(route.name === 'home')} href="/" title="Accueil" aria-current={route.name === 'home' ? 'page' : undefined} onClick={(e) => (onLinkClick(e, '/'), onNavigate())}>
+            <House aria-hidden /> Accueil
+          </a>
+          <a
+            className={navLink(route.name === 'trash')}
+            href="/corbeille"
+            title="Corbeille"
+            aria-current={route.name === 'trash' ? 'page' : undefined}
+            onClick={(e) => (onLinkClick(e, '/corbeille'), onNavigate())}
+          >
+            <Trash2 aria-hidden /> Corbeille
+          </a>
+          {/* Rail d'icônes seulement : l'espace et l'arbre n'y tiennent pas, ce bouton ouvre le panneau complet. */}
+          <button
+            type="button"
+            className={`${navLink(activeId !== null || route.name === 'space')} side-rail-only`}
+            data-panel-open
+            title={currentSpace ? `Pages de l’espace ${currentSpace.name}` : 'Pages'}
+            aria-expanded={panelOpen}
+            onClick={onOpenPanel}
+          >
+            <ListTree aria-hidden /> Pages
+          </button>
+        </nav>
+        <div className="side-pages">
+          <SpacePicker />
+          <div className="tree-head">
+            <span id="tree-label">Pages</span>
+            {currentSpace && (
+              <a
+                className="btn btn--ghost btn--icon btn--sm"
+                href={`/nouvelle?espace=${currentSpace.id}`}
+                title="Nouvelle page (N)"
+                aria-label="Nouvelle page dans cet espace"
+                onClick={(e) => {
+                  onLinkClick(e, `/nouvelle?espace=${currentSpace.id}`)
+                  onNavigate()
+                }}
+              >
+                <Plus />
+              </a>
+            )}
+          </div>
+          {tree.error ? (
+            <p className="side-note">{tree.error.message}</p>
+          ) : pages.length === 0 && !tree.loading ? (
+            <p className="side-note">Cet espace est vide. Crée sa première page avec le bouton +.</p>
+          ) : (
+            <TreeLevel
+              parentId={null}
+              childrenOf={children}
+              byId={byId}
+              expanded={expanded}
+              toggle={toggle}
+              expand={(id) => !expanded.has(id) && saveExpanded(new Set([...expanded, id]))}
+              activeId={activeId}
+              onNavigate={onNavigate}
+              depth={0}
+            />
           )}
         </div>
-        {tree.error ? (
-          <p className="side-note">{tree.error.message}</p>
-        ) : pages.length === 0 && !tree.loading ? (
-          <p className="side-note">Cet espace est vide. Crée sa première page avec le bouton +.</p>
-        ) : (
-          <TreeLevel
-            parentId={null}
-            childrenOf={children}
-            byId={byId}
-            expanded={expanded}
-            toggle={toggle}
-            expand={(id) => !expanded.has(id) && saveExpanded(new Set([...expanded, id]))}
-            activeId={activeId}
-            onNavigate={onNavigate}
-            depth={0}
-          />
-        )}
       </div>
       <div className="side-extra">
-        <button type="button" className="nav-link" aria-haspopup="dialog" onClick={(e) => onOpenExamples(e.currentTarget)}>
+        <button type="button" className="nav-link" title="Exemples de la suite" aria-haspopup="dialog" onClick={(e) => onOpenExamples(e.currentTarget)}>
           <ExamplesIcon aria-hidden /> Exemples de la suite
         </button>
       </div>
@@ -229,7 +253,7 @@ function SpacePicker() {
         <ChevronsUpDown aria-hidden className="space-picker__chevron" />
       </button>
       {open && (
-        <div role="menu" className="popover" style={{ top: 'calc(100% + 6px)', left: 0, right: 0 }}>
+        <div role="menu" className="popover">
           <div className="menu-heading">Espaces</div>
           {spaces.map((s) => (
             <a

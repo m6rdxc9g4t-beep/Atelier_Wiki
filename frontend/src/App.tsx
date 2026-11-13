@@ -1,4 +1,5 @@
-// Coquille de l'application : en-tête, barre latérale, vue de l'adresse courante, recherche ⌘K, raccourcis.
+// Coquille de l'application : barre latérale (rail d'icônes sous 1024 px, panneau des pages par-dessus), barre haute,
+// vue de l'adresse courante, recherche ⌘K, raccourcis.
 
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 
@@ -9,6 +10,7 @@ import { SuiteExamplesDialog } from './components/SuiteExamples.tsx'
 import { Skeleton, UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
 import { focusReturn, paletteShortcut } from './lib/dialogs.ts'
+import { panelShortcut, RAIL_QUERY } from './lib/shell.ts'
 import { navigate, useLocation, useRoute, type Route } from './lib/router.ts'
 import { HistoryView } from './views/HistoryView.tsx'
 import { HomeView, NotFoundView, SearchView, SpaceView, TrashView } from './views/OtherViews.tsx'
@@ -79,23 +81,54 @@ function Shell() {
   const { currentSpace, spaces } = useWiki()
   const [navOpen, setNavOpen] = useState(false)
 
-  // Menu (écran étroit) refermé à chaque changement d'adresse.
+  // Panneau des pages (ouvert par-dessus la page depuis le rail) : refermé à chaque changement d'adresse.
   useEffect(() => setNavOpen(false), [key])
 
-  // « Exemples de la suite » : fenêtre ouverte depuis le pied de la barre latérale. À sa fermeture, le focus revient
-  // au bouton qui l'a ouverte ; si le tiroir du téléphone s'est refermé entre-temps (exemple ouvert), au bouton du menu.
   const sidebar = useRef<HTMLElement>(null)
-  const navToggle = useRef<HTMLButtonElement>(null)
-  const [examples, setExamples] = useState<{ opener: HTMLElement; key: string } | null>(null)
+  const closeNav = useCallback(() => setNavOpen(false), [])
+  const railMode = () => window.matchMedia(RAIL_QUERY).matches
+
+  // À l'ouverture, le focus entre dans le panneau (le bouton « Pages » du rail vient de disparaître) ; quand il se
+  // referme alors que le focus y était resté — Échap, « Replier », voile — il revient à ce bouton.
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    const aside = sidebar.current
+    if (!aside || !railMode()) {
+      wasOpen.current = navOpen
+      return
+    }
+    if (navOpen) aside.querySelector<HTMLElement>('[data-panel-close]')?.focus()
+    else if (wasOpen.current && (document.activeElement === document.body || aside.contains(document.activeElement))) {
+      aside.querySelector<HTMLElement>('[data-panel-open]')?.focus()
+    }
+    wasOpen.current = navOpen
+  }, [navOpen])
+
+  // Échap referme le panneau (règle : `panelShortcut`).
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (panelShortcut(e, { open: railMode(), layered: document.querySelector('dialog[open], .palette') !== null }) === 'close') {
+        e.preventDefault()
+        setNavOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
+  // « Exemples de la suite » : fenêtre ouverte depuis le pied de la barre latérale. À sa fermeture, le focus revient
+  // au bouton qui l'a ouverte (il reste affiché dans le rail) ; s'il n'est plus affiché, au bouton « Pages » du rail.
+  const [examples, setExamples] = useState<{ opener: HTMLElement } | null>(null)
   const closeExamples = useCallback(() => setExamples(null), [])
   const shownExamples = useRef(examples)
   useEffect(() => {
     const closed = shownExamples.current
     shownExamples.current = examples
     if (examples || !closed) return
-    const drawer = sidebar.current !== null && getComputedStyle(sidebar.current).position === 'fixed'
-    focusReturn<HTMLElement>({ opener: closed.opener, fallback: navToggle.current, drawer, moved: closed.key !== key })?.focus()
-  }, [examples, key])
+    const fallback = sidebar.current?.querySelector<HTMLElement>('[data-panel-open]') ?? null
+    focusReturn<HTMLElement>({ opener: closed.opener, fallback, hidden: closed.opener.getClientRects().length === 0 })?.focus()
+  }, [examples])
 
   // N : nouvelle page dans l'espace courant (hors saisie et hors éditeur).
   useEffect(() => {
@@ -116,11 +149,18 @@ function Shell() {
         Aller au contenu
       </a>
       <aside ref={sidebar} className="sidebar" aria-label="Pages du wiki">
-        <Sidebar route={route} onNavigate={() => setNavOpen(false)} onOpenExamples={(opener) => setExamples({ opener, key })} />
+        <Sidebar
+          route={route}
+          panelOpen={navOpen}
+          onOpenPanel={() => setNavOpen(true)}
+          onClosePanel={closeNav}
+          onNavigate={closeNav}
+          onOpenExamples={(opener) => setExamples({ opener })}
+        />
       </aside>
-      <div className="sidebar-backdrop" onClick={() => setNavOpen(false)} />
+      <div className="sidebar-backdrop" onClick={closeNav} />
       <div className="main-col">
-        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} toggleRef={navToggle} />
+        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} />
         <main className="main" id="contenu">
           <View route={route} />
         </main>

@@ -1,0 +1,26 @@
+// Coquille : règles pures de la barre latérale (testées sans DOM).
+// Même forme que dans Atelier Viz et Atelier Tab : barre de 232 px ; sous 1024 px, un rail d'icônes (Viz) d'où le
+// panneau complet — espace et arbre des pages — s'ouvre par-dessus la page, en tiroir (Tab).
+
+import type { ThemePreference } from './theme.ts'
+
+/** Dernière largeur du rail d'icônes : la barre complète commence à 1024 px (palier `lg` de Viz). */
+export const RAIL_MAX_WIDTH = 1023.98
+
+/** Requête de média du rail : la même que dans `wiki.css` (vérifié par `design.test.ts`). */
+export const RAIL_QUERY = `(max-width: ${RAIL_MAX_WIDTH}px)`
+
+const THEME_ORDER: ThemePreference[] = ['system', 'light', 'dark']
+
+/** Bouton de thème du rail : Système → Clair → Sombre → Système. */
+export function nextTheme(preference: ThemePreference): ThemePreference {
+  return THEME_ORDER[(THEME_ORDER.indexOf(preference) + 1) % THEME_ORDER.length]!
+}
+
+/**
+ * Échap referme le panneau ouvert par-dessus la page — sauf si une fenêtre, la recherche ou un menu est ouvert :
+ * la touche est alors pour eux (un menu du panneau se referme d'abord, le panneau à l'Échap suivant).
+ */
+export function panelShortcut(e: { key: string }, state: { open: boolean; layered: boolean }): 'close' | null {
+  return e.key === 'Escape' && state.open && !state.layered ? 'close' : null
+}

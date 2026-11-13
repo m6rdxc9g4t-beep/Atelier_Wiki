@@ -167,6 +167,14 @@ export function excerpt(markdown: string, max = 180, format: PageFormat = 'markd
 const fold = (word: string) => word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
 /**
+ * Place du premier mot trouvé dans un extrait : une liste coupe l'extrait à deux lignes, soit une soixantaine de
+ * caractères au téléphone. Le mot doit finir dans les `EXCERPT_LEAD` premiers ; sinon l'extrait commence
+ * `EXCERPT_BEFORE` caractères avant lui.
+ */
+const EXCERPT_LEAD = 50
+const EXCERPT_BEFORE = 30
+
+/**
  * Extrait d'un résultat de recherche, taillé dans le texte brut autour du premier mot trouvé ; chaque mot trouvé
  * (début de mot, accents ignorés, comme l'index) est entouré de `start` / `end`. Sans mot trouvé dans le texte
  * (titre seul, balisage) : le début de la page.
@@ -182,11 +190,14 @@ export function searchExcerpt(plain: string, terms: string[], marks: { start: st
   }
   let from = 0
   const first = hits[0]
-  if (first && first.to > max - 20) {
-    // Le mot trouvé est loin : la fenêtre commence un peu avant lui, sur un début de mot.
-    from = Math.max(0, first.from - 50)
-    const space = plain.indexOf(' ', from)
-    if (from > 0 && space >= 0 && space < first.from) from = space + 1
+  if (first && first.to > EXCERPT_LEAD) {
+    // Le mot trouvé ne tiendrait pas dans les deux premières lignes : la fenêtre commence un peu avant lui, sur un
+    // début de mot.
+    from = Math.max(0, first.from - EXCERPT_BEFORE)
+    if (from > 0 && plain[from - 1] !== ' ') {
+      const space = plain.indexOf(' ', from)
+      if (space >= 0 && space < first.from) from = space + 1
+    }
   }
   let to = Math.min(plain.length, from + max)
   if (to < plain.length) {

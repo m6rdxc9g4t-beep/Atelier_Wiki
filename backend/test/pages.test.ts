@@ -205,7 +205,8 @@ describe('recherche', () => {
     createPage(db, { spaceId: space, title: 'Cours', format: 'latex', content: '\\section{Taux \\& Temps}\nLe \\textbf{taux} du mois.' }, 'x')
 
     const clean = (q: string) => searchPages(db, q).map((h) => h.snippet.replaceAll('\u0002', '[').replaceAll('\u0003', ']'))
-    assert.deepEqual(clean('dashboard'), ['Table des matières VI - Taux & Temps Introduction Indicateur Remarque Taux & Temps Voir I - [Dashboard] puis II - PdC NRJ & Abs à vérifier'])
+    // « Dashboard » est loin dans la page : l'extrait commence un peu avant lui (il doit tenir dans les deux lignes d'une liste étroite).
+    assert.deepEqual(clean('dashboard'), ['…Taux & Temps Voir I - [Dashboard] puis II - PdC NRJ & Abs à vérifier'])
     // Mots de l'index qui ne sont que du balisage (« amp », « br ») : la page est trouvée, l'extrait reste propre.
     for (const markup of ['amp', 'br']) {
       for (const snippet of clean(markup)) assert.doesNotMatch(snippet, /&amp;|amp;|<|>|\|/, `${markup} : ${snippet}`)

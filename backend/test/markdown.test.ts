@@ -142,4 +142,20 @@ describe('extrait d’un résultat de recherche', () => {
     assert.match(out, /^…début /, 'pas de mot coupé au début')
     assert.match(out, / fin…$/, 'pas de mot coupé à la fin')
   })
+
+  it('montre le mot trouvé dans les deux premières lignes d’une liste étroite (téléphone)', () => {
+    // Cas vu à 390 px : le mot finissait vers le 75e caractère d'un extrait coupé à une soixantaine.
+    const text = 'Table des matières Introduction I - Dashboard II - PdC Estimation VI Taux & Temps Introduction Le module Projet suit le taux de charge.'
+    const out = searchExcerpt(text, ['taux'], marks)
+    assert.equal(out, '…II - PdC Estimation VI [Taux] & Temps Introduction Le module Projet suit le [taux] de charge.')
+    assert.ok(out.indexOf(']') <= 50, 'le premier mot trouvé finit dans les cinquante premiers caractères')
+    // Un mot déjà dans les deux premières lignes : l'extrait part du début de la page, sans « … » de tête.
+    const near = 'Le module Projet suit le taux de charge et le temps passé, semaine après semaine, pour chaque équipe.'
+    assert.equal(searchExcerpt(near, ['taux'], marks), near.replace('taux', '[taux]'))
+    // Quel que soit l'endroit du mot, il finit dans les cinquante premiers caractères de l'extrait.
+    for (let before = 0; before < 200; before += 7) {
+      const far = searchExcerpt(`${'mot '.repeat(before)}zygomatique ${'suite '.repeat(40)}`, ['zygo'], marks)
+      assert.ok(far.indexOf(']') <= 50, `mot après ${before * 4} caractères : ${far.slice(0, 70)}`)
+    }
+  })
 })

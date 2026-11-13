@@ -151,6 +151,15 @@ describe('barre latérale à la forme de Viz et de Tab', () => {
     assert.doesNotMatch(sidebar, /SuiteSwitcher/)
   })
 
+  it('un message avec action tient dans la page étroite du rail : l’action passe sous le texte', () => {
+    assert.match(rule(css, '.notice'), /flex-wrap: wrap;/)
+    assert.match(rule(css, '.notice > div'), /min-width: min\(100%, 200px\);/)
+    // Le bouton principal d'un message garde son texte clair (il prenait l'encre du message : noir sur la signature).
+    assert.match(css, /\.notice \.btn:not\(\.btn--primary\) \{\s*color: var\(--app-text\);/)
+    assert.doesNotMatch(css, /\n\.notice \.btn \{/)
+    assert.match(rule(css, '.notice .btn svg'), /color: inherit;/)
+  })
+
   it('donne 40 px aux cibles de la barre latérale au doigt', () => {
     const coarse = css.slice(css.indexOf('@media (pointer: coarse) {'))
     assert.match(coarse, /\.nav-link,\s*\.tree-row,\s*\.search-trigger,\s*\.space-picker__button,[^{]*\{\s*height: 40px;/)

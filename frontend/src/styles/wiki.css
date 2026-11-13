@@ -1882,8 +1882,10 @@ dialog.dialog::backdrop {
 }
 
 /* ── Messages ────────────────────────────────────────────────────────────── */
+/* Message + action : sur un écran étroit l'action passe sous le texte au lieu de l'écraser en colonne d'un mot. */
 .notice {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: flex-start;
   padding: 10px 12px;
@@ -1915,8 +1917,16 @@ dialog.dialog::backdrop {
 .notice--warning svg {
   color: var(--warning);
 }
-.notice .btn {
+.notice > div {
+  min-width: min(100%, 200px);
+}
+/* Un bouton secondaire prend l'encre ; le bouton principal garde son texte et son icône (blancs sur la signature). */
+.notice .btn:not(.btn--primary) {
   color: var(--app-text);
+}
+.notice .btn svg {
+  margin-top: 0;
+  color: inherit;
 }
 
 .toasts {

@@ -164,4 +164,28 @@ describe('actions', () => {
     assert.deepEqual([none.rows, none.total], [[], 0])
     await app.close()
   })
+
+  it('sert au Hub et à Nexus des titres et des extraits en texte brut (ni « &amp; », ni « <br> », ni marqueurs)', async () => {
+    const { app } = await testApp({ seed: true })
+    const content = '## Table des matières\n\n- [VI - Taux &amp; Temps <br> Introduction](#)\n\n| Indicateur | Remarque |\n|---|---|\n| NRJ &amp; Abs | <br> à **vérifier** |\n'
+    const created = (await app.inject(json('POST', '/api/atelier/pages', { title: 'Types de tickets & OpenProject', content }))).json()
+    assert.equal(created.title, 'Types de tickets & OpenProject')
+    await app.inject(json('POST', '/api/atelier/pages', { title: 'Renvoi', content: 'Voir [[Types de tickets & OpenProject]].' }))
+
+    const search = (await app.inject(json('POST', '/api/atelier/search', { query: 'temps' }))).json()
+    assert.deepEqual(
+      search.rows.filter((r: { id: string }) => r.id === created.id).map((r: { titre: string; extrait: string }) => [r.titre, r.extrait]),
+      [['Types de tickets & OpenProject', 'Table des matières VI - Taux & Temps Introduction Indicateur Remarque NRJ & Abs à vérifier']],
+    )
+    const listed = (await app.inject(json('GET', '/api/atelier/pages'))).json()
+    assert.ok(listed.rows.some((r: { titre: string }) => r.titre === 'Types de tickets & OpenProject'))
+    const page = (await app.inject(json('GET', `/api/atelier/pages/${created.id}`))).json()
+    assert.equal(page.title, 'Types de tickets & OpenProject')
+    assert.deepEqual(page.backlinks.map((b: { title: string }) => b.title), ['Renvoi'])
+    // Aucune réponse du nœud ne porte d'entité ni de caractère de contrôle dans un titre ou un extrait.
+    for (const text of [JSON.stringify(search.rows), JSON.stringify(listed.rows.map((r: { titre: string }) => r.titre))]) {
+      assert.doesNotMatch(text, /&amp;|<br|\\u000[23]/)
+    }
+    await app.close()
+  })
 })

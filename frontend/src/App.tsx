@@ -1,6 +1,7 @@
-// Coquille de l'application : en-tête, barre latérale, vue de l'adresse courante, recherche ⌘K, raccourcis.
+// Coquille de l'application : barre latérale (rail d'icônes sous 1024 px, panneau des pages par-dessus), barre haute,
+// vue de l'adresse courante, recherche ⌘K, raccourcis.
 
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { CommandPalette } from './components/CommandPalette.tsx'
 import { AboutDialog, Topbar } from './components/Header.tsx'
@@ -9,6 +10,7 @@ import { SuiteExamplesDialog } from './components/SuiteExamples.tsx'
 import { Skeleton, UiProvider } from './components/ui.tsx'
 import { useWiki, WikiProvider } from './components/WikiContext.tsx'
 import { focusReturn, paletteShortcut } from './lib/dialogs.ts'
+import { PANEL_LAYERS, panelCovers, panelShortcut, RAIL_QUERY } from './lib/shell.ts'
 import { navigate, useLocation, useRoute, type Route } from './lib/router.ts'
 import { HistoryView } from './views/HistoryView.tsx'
 import { HomeView, NotFoundView, SearchView, SpaceView, TrashView } from './views/OtherViews.tsx'
@@ -73,29 +75,77 @@ function viewTitle(route: Route, spaceName: string | undefined, spaces: { slug: 
   }
 }
 
+function watchRail(notify: () => void) {
+  const media = window.matchMedia(RAIL_QUERY)
+  media.addEventListener('change', notify)
+  return () => media.removeEventListener('change', notify)
+}
+
+/** La fenêtre est-elle assez étroite pour le rail d'icônes (sous 1024 px) ? */
+function useRail(): boolean {
+  return useSyncExternalStore(watchRail, () => window.matchMedia(RAIL_QUERY).matches)
+}
+
 function Shell() {
   const route = useRoute()
   const { key } = useLocation()
   const { currentSpace, spaces } = useWiki()
   const [navOpen, setNavOpen] = useState(false)
+  const rail = useRail()
+  // Tant que le panneau couvre la page, le reste est inerte (règle : `panelCovers`).
+  const covered = panelCovers({ open: navOpen, rail })
 
-  // Menu (écran étroit) refermé à chaque changement d'adresse.
-  useEffect(() => setNavOpen(false), [key])
+  // Panneau des pages (ouvert par-dessus la page depuis le rail) : refermé à chaque changement d'adresse, et quand la
+  // fenêtre s'élargit jusqu'à la barre complète.
+  useEffect(() => setNavOpen(false), [key, rail])
+
+  const sidebar = useRef<HTMLElement>(null)
+  const closeNav = useCallback(() => setNavOpen(false), [])
+  const railMode = () => window.matchMedia(RAIL_QUERY).matches
+
+  // À l'ouverture, le focus entre dans le panneau (le bouton « Pages » du rail vient de disparaître) ; quand il se
+  // referme alors que le focus y était resté — Échap, « Replier », voile — il revient à ce bouton.
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    const aside = sidebar.current
+    if (!aside || !railMode()) {
+      wasOpen.current = navOpen
+      return
+    }
+    if (navOpen) aside.querySelector<HTMLElement>('[data-panel-close]')?.focus()
+    else if (wasOpen.current && (document.activeElement === document.body || aside.contains(document.activeElement))) {
+      aside.querySelector<HTMLElement>('[data-panel-open]')?.focus()
+    }
+    wasOpen.current = navOpen
+  }, [navOpen])
+
+  // Échap referme le panneau (règle : `panelShortcut`). Écouteur en phase de capture : ce qui est ouvert par-dessus
+  // est lu avant de traiter la touche — la recherche et les menus se referment en la recevant, et à la remontée ils
+  // ne seraient plus là : un seul Échap refermait alors la recherche et le panneau.
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (panelShortcut(e, { open: railMode(), layered: document.querySelector(PANEL_LAYERS) !== null }) === 'close') {
+        e.preventDefault()
+        setNavOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [navOpen])
 
   // « Exemples de la suite » : fenêtre ouverte depuis le pied de la barre latérale. À sa fermeture, le focus revient
-  // au bouton qui l'a ouverte ; si le tiroir du téléphone s'est refermé entre-temps (exemple ouvert), au bouton du menu.
-  const sidebar = useRef<HTMLElement>(null)
-  const navToggle = useRef<HTMLButtonElement>(null)
-  const [examples, setExamples] = useState<{ opener: HTMLElement; key: string } | null>(null)
+  // au bouton qui l'a ouverte (il reste affiché dans le rail) ; s'il n'est plus affiché, au bouton « Pages » du rail.
+  const [examples, setExamples] = useState<{ opener: HTMLElement } | null>(null)
   const closeExamples = useCallback(() => setExamples(null), [])
   const shownExamples = useRef(examples)
   useEffect(() => {
     const closed = shownExamples.current
     shownExamples.current = examples
     if (examples || !closed) return
-    const drawer = sidebar.current !== null && getComputedStyle(sidebar.current).position === 'fixed'
-    focusReturn<HTMLElement>({ opener: closed.opener, fallback: navToggle.current, drawer, moved: closed.key !== key })?.focus()
-  }, [examples, key])
+    const fallback = sidebar.current?.querySelector<HTMLElement>('[data-panel-open]') ?? null
+    focusReturn<HTMLElement>({ opener: closed.opener, fallback, hidden: closed.opener.getClientRects().length === 0 })?.focus()
+  }, [examples])
 
   // N : nouvelle page dans l'espace courant (hors saisie et hors éditeur).
   useEffect(() => {
@@ -112,15 +162,22 @@ function Shell() {
 
   return (
     <div className="shell" data-nav={navOpen ? 'open' : 'closed'}>
-      <a className="sr-only" href="#contenu">
+      <a className="sr-only" href="#contenu" inert={covered}>
         Aller au contenu
       </a>
       <aside ref={sidebar} className="sidebar" aria-label="Pages du wiki">
-        <Sidebar route={route} onNavigate={() => setNavOpen(false)} onOpenExamples={(opener) => setExamples({ opener, key })} />
+        <Sidebar
+          route={route}
+          panelOpen={navOpen}
+          onOpenPanel={() => setNavOpen(true)}
+          onClosePanel={closeNav}
+          onNavigate={closeNav}
+          onOpenExamples={(opener) => setExamples({ opener })}
+        />
       </aside>
-      <div className="sidebar-backdrop" onClick={() => setNavOpen(false)} />
-      <div className="main-col">
-        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} navOpen={navOpen} onToggleNav={() => setNavOpen((o) => !o)} toggleRef={navToggle} />
+      <div className="sidebar-backdrop" onClick={closeNav} />
+      <div className="main-col" inert={covered}>
+        <Topbar title={viewTitle(route, currentSpace?.name, spaces)} />
         <main className="main" id="contenu">
           <View route={route} />
         </main>
@@ -133,7 +190,29 @@ function Shell() {
 
 export function App() {
   const [palette, setPalette] = useState<string | null>(null)
-  const openPalette = useCallback((initial = '') => setPalette(initial), [])
+
+  // Qui avait le focus à l'ouverture de la recherche le retrouve à sa fermeture (bouton « Rechercher… », éditeur) :
+  // sinon il se perd sur la page — et sous 1024 px, hors du panneau resté ouvert. Retenu avant l'ouverture : le champ
+  // de la recherche prend le focus dès qu'il est monté.
+  const paletteOpener = useRef<HTMLElement | null>(null)
+  const rememberFocus = () => {
+    if (document.querySelector('.palette')) return
+    const active = document.activeElement
+    paletteOpener.current = active instanceof HTMLElement && active !== document.body ? active : null
+  }
+  const paletteOpen = palette !== null
+  useEffect(() => {
+    if (paletteOpen) return
+    const opener = paletteOpener.current
+    paletteOpener.current = null
+    // Déclencheur retiré ou plus affiché (l'adresse a changé, le panneau s'est refermé) : rien, le panneau s'en charge.
+    if (opener) focusReturn<HTMLElement>({ opener, fallback: null, hidden: opener.getClientRects().length === 0 })?.focus()
+  }, [paletteOpen])
+
+  const openPalette = useCallback((initial = '') => {
+    rememberFocus()
+    setPalette(initial)
+  }, [])
 
   // ⌘K / Ctrl+K partout ; « / » hors saisie ; rien sous une fenêtre modale (règle : `paletteShortcut`).
   useEffect(() => {
@@ -141,6 +220,7 @@ export function App() {
       const action = paletteShortcut(e, { typing: isTyping(e.target), modal: document.querySelector('dialog[open]') !== null })
       if (!action) return
       e.preventDefault()
+      rememberFocus()
       setPalette((p) => (action === 'toggle' && p !== null ? null : ''))
     }
     window.addEventListener('keydown', onKey)

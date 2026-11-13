@@ -62,7 +62,8 @@ export default function Mermaid({ source, onZoom }: { source: string; onZoom?: (
     return (
       <div className="mermaid mermaid--error">
         <p className="notice notice--warning">
-          <TriangleAlert aria-hidden /> Schéma Mermaid illisible : {error}
+          <TriangleAlert aria-hidden />
+          <span>Schéma Mermaid illisible : {error}</span>
         </p>
         <pre>
           <code>{source}</code>

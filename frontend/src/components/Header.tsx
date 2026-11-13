@@ -1,9 +1,11 @@
-// Coquille (charte v2 « Linear ») : marque « Atelier Wiki » et fenêtre « À propos », sélecteur de la suite,
-// recherche (⌘K), choix du thème (préférence commune à la suite), auteur connecté, barre haute de la vue.
+// Coquille (charte v2 « Linear », même forme qu'Atelier Viz et Atelier Tab) : marque « Atelier Wiki » et fenêtre
+// « À propos », sélecteur de la suite (au début de la barre haute, comme dans Viz), recherche (⌘K), choix du thème
+// (préférence commune à la suite), auteur connecté, barre haute de la vue.
 
-import { Check, LayoutGrid, Menu, Monitor, Moon, Search, Sun } from 'lucide-react'
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
+import { Check, LayoutGrid, Monitor, Moon, Search, Sun } from 'lucide-react'
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
+import { nextTheme } from '../lib/shell.ts'
 import { checkHealth, CURRENT_APP, PORTAL_URL, SUITE_APPS, type SuiteAppId } from '../lib/suite.ts'
 import { useTheme, type ThemePreference } from '../lib/theme.ts'
 import { AppGlyph } from './AppGlyph.tsx'
@@ -17,16 +19,18 @@ const ABOUT_ID = 'atelier-about'
 
 // ── Marque et « À propos » ──────────────────────────────────────────────────
 
-export function Brand({ compact = false }: { compact?: boolean }) {
+/** Marque en tête de la barre latérale : tuile de 20 px et nom, comme dans Viz ; la tuile seule dans le rail. */
+export function Brand() {
   return (
     <button
       type="button"
-      className={`atelier-brand side-brand${compact ? ' side-brand--compact' : ''}`}
+      className="atelier-brand side-brand"
       aria-haspopup="dialog"
+      aria-label="À propos d’Atelier Wiki"
       title="À propos d’Atelier Wiki"
       onClick={() => document.querySelector<HTMLDialogElement>(`#${ABOUT_ID}`)?.showModal()}
     >
-      <span className={`atelier-brand__tile${compact ? ' atelier-brand__tile--sm' : ''}`} aria-hidden="true">
+      <span className="atelier-brand__tile atelier-brand__tile--sm" aria-hidden="true">
         <AppGlyph id="wiki" />
       </span>
       <span className="atelier-brand__name">
@@ -116,7 +120,7 @@ export function SuiteSwitcher() {
       <button
         ref={trigger}
         type="button"
-        className="btn btn--ghost btn--icon"
+        className="btn btn--ghost btn--icon suite-trigger"
         aria-label="Suite Atelier : changer d’application"
         title="Suite Atelier"
         aria-haspopup="menu"
@@ -188,7 +192,14 @@ export function SuiteSwitcher() {
 export function SearchTrigger() {
   const { openPalette } = useWiki()
   return (
-    <button type="button" className="search-trigger" onClick={() => openPalette()} aria-label="Rechercher dans le wiki" aria-keyshortcuts="Meta+K Control+K /">
+    <button
+      type="button"
+      className="search-trigger"
+      onClick={() => openPalette()}
+      aria-label="Rechercher dans le wiki"
+      title={`Rechercher dans le wiki (${MOD_KEY} K)`}
+      aria-keyshortcuts="Meta+K Control+K /"
+    >
       <Search aria-hidden />
       <span>Rechercher…</span>
       <kbd>{MOD_KEY} K</kbd>
@@ -202,17 +213,33 @@ const THEMES: { value: ThemePreference; label: string; icon: ReactNode }[] = [
   { value: 'dark', label: 'Sombre', icon: <Moon aria-hidden /> },
 ]
 
-/** Système / Clair / Sombre : la préférence vaut pour toute la suite (atelier-theme.js). */
+/**
+ * Système / Clair / Sombre : la préférence vaut pour toute la suite (atelier-theme.js).
+ * Dans le rail d'icônes, les trois boutons ne tiennent pas : un seul bouton montre le thème choisi et passe au suivant.
+ */
 export function ThemeSwitch() {
   const [preference, setPreference] = useTheme()
+  const current = THEMES.find((t) => t.value === preference) ?? THEMES[0]!
+  const next = THEMES.find((t) => t.value === nextTheme(preference)) ?? THEMES[0]!
   return (
-    <div className="segmented segmented--icons" role="group" aria-label="Thème">
-      {THEMES.map((t) => (
-        <button key={t.value} type="button" aria-pressed={t.value === preference} aria-label={`Thème : ${t.label}`} title={t.label} onClick={() => setPreference(t.value)}>
-          {t.icon}
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="segmented segmented--icons theme-switch" role="group" aria-label="Thème">
+        {THEMES.map((t) => (
+          <button key={t.value} type="button" aria-pressed={t.value === preference} aria-label={`Thème : ${t.label}`} title={t.label} onClick={() => setPreference(t.value)}>
+            {t.icon}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="nav-link theme-cycle"
+        aria-label={`Thème : ${current.label}. Passer à ${next.label}`}
+        title={`Thème : ${current.label} (cliquer : ${next.label})`}
+        onClick={() => setPreference(next.value)}
+      >
+        {current.icon}
+      </button>
+    </>
   )
 }
 
@@ -231,36 +258,12 @@ export function UserChip() {
 
 // ── Barre haute de la vue ───────────────────────────────────────────────────
 
-interface TopbarProps {
-  title: string
-  onToggleNav: () => void
-  navOpen: boolean
-  /** Bouton du menu (écran étroit) : repli du focus quand le tiroir s'est refermé. */
-  toggleRef?: RefObject<HTMLButtonElement | null>
-}
-
-export function Topbar({ title, onToggleNav, navOpen, toggleRef }: TopbarProps) {
-  const { openPalette } = useWiki()
+/** Barre haute : le sélecteur de la suite puis le titre de la vue (même place et même forme que dans Atelier Viz). */
+export function Topbar({ title }: { title: string }) {
   return (
     <header className="topbar">
-      <button
-        ref={toggleRef}
-        type="button"
-        className="btn btn--ghost btn--icon topbar__mobile"
-        aria-label={navOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-        aria-expanded={navOpen}
-        onClick={onToggleNav}
-      >
-        <Menu />
-      </button>
-      <span className="topbar__mobile">
-        <Brand compact />
-      </span>
+      <SuiteSwitcher />
       <p className="topbar__title">{title}</p>
-      <div className="topbar__spacer" />
-      <button type="button" className="btn btn--ghost btn--icon topbar__mobile" aria-label="Rechercher dans le wiki" onClick={() => openPalette()}>
-        <Search />
-      </button>
     </header>
   )
 }

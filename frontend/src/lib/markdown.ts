@@ -36,14 +36,57 @@ export interface Heading {
   id: string
 }
 
-/** Texte brut d'un titre Markdown (pour la table des matières). */
+// Mêmes entités que le backend (backend/src/domain/markdown.ts, table comparée par un test) : un titre « Taux &amp; Temps »
+// s'affiche « Taux & Temps » dans la page, donc aussi dans la table des matières et dans son ancre.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ensp: ' ', emsp: ' ', thinsp: ' ', zwj: '\u200d', zwnj: '\u200c',
+  lsquo: '‘', rsquo: '’', sbquo: '‚', ldquo: '“', rdquo: '”', bdquo: '„', lsaquo: '‹', rsaquo: '›', hellip: '…', ndash: '–', mdash: '—',
+  euro: '€', trade: '™', bull: '•', permil: '‰', dagger: '†', prime: '′', Prime: '″', oelig: 'œ', OElig: 'Œ', Yuml: 'Ÿ', check: '✓', cross: '✗',
+  rarr: '→', larr: '←', uarr: '↑', darr: '↓', harr: '↔', rArr: '⇒', lArr: '⇐', hArr: '⇔',
+  le: '≤', ge: '≥', ne: '≠', asymp: '≈', equiv: '≡', minus: '−', infin: '∞', sum: '∑', prod: '∏', radic: '√', part: '∂', isin: '∈', empty: '∅',
+}
+// Tout Latin-1 (U+00A0 à U+00FF : « &eacute; », « &times; », « &deg; »…) et l'alphabet grec, dans l'ordre d'Unicode.
+const ENTITY_RANGES: [first: number, names: string][] = [
+  [0xa0, 'nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest'],
+  [0xc0, 'Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig'],
+  [0xe0, 'agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml'],
+  [0x391, 'Alpha Beta Gamma Delta Epsilon Zeta Eta Theta Iota Kappa Lambda Mu Nu Xi Omicron Pi Rho'],
+  [0x3a3, 'Sigma Tau Upsilon Phi Chi Psi Omega'],
+  [0x3b1, 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigmaf sigma tau upsilon phi chi psi omega'],
+]
+for (const [first, names] of ENTITY_RANGES) {
+  names.split(' ').forEach((name, i) => {
+    // Une entrée de la table du dessus l'emporte (« &nbsp; » devient une espace ordinaire).
+    if (!Object.hasOwn(NAMED_ENTITIES, name)) NAMED_ENTITIES[name] = String.fromCodePoint(first + i)
+  })
+}
+
+/** Entités HTML → caractères : nommées (table ci-dessus), décimales et hexadécimales. Une entité inconnue reste telle quelle. */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#[xX][0-9a-fA-F]{1,6}|#\d{1,7}|[a-zA-Z][a-zA-Z0-9]{1,11});/g, (match, body: string) => {
+    // `Object.hasOwn` : « &constructor; » ou « &toString; » ne sont pas des entités (propriétés héritées de tout objet).
+    if (body[0] !== '#') return Object.hasOwn(NAMED_ENTITIES, body) ? NAMED_ENTITIES[body]! : match
+    const code = body[1] === 'x' || body[1] === 'X' ? Number.parseInt(body.slice(2), 16) : Number.parseInt(body.slice(1), 10)
+    if (!Number.isInteger(code) || code < 0x20 || (code >= 0x7f && code < 0xa0) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return ' '
+    return String.fromCodePoint(code)
+  })
+}
+
+/** Saut de ligne écrit en HTML (`<br>`, `<br/>`, `<br />`) : la seule balise que le rendu comprend (remarkLineBreaks). */
+const LINE_BREAK_RE = /<br\s*\/?>/gi
+
+/** Texte brut d'un titre Markdown (pour la table des matières) : ce que le rendu affiche, sans syntaxe ni entités. */
 function plainInline(text: string): string {
-  return text
-    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
-    .replace(/\[\[([^\]]+)\]\]/g, '$1')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/[*_~`]/g, '')
-    .replace(/\s+#+\s*$/, '')
+  return decodeEntities(
+    text
+      .replace(LINE_BREAK_RE, ' ')
+      .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
+      .replace(/\[\[([^\]]+)\]\]/g, '$1')
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[*_~`]/g, '')
+      .replace(/\s+#+\s*$/, ''),
+  )
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
@@ -135,4 +178,48 @@ export function remarkFrenchSpacing() {
     node.children?.forEach(walk)
   }
   return (tree: MdNode) => walk(tree)
+}
+
+/**
+ * Greffon remark : `<br>` écrit dans le texte (cellule de tableau, liste, paragraphe) devient un vrai saut de ligne.
+ * C'est la seule balise comprise ; toute autre reste du texte affiché tel quel (aucun HTML n'est interprété).
+ */
+export function remarkLineBreaks() {
+  const walk = (node: MdNode) => {
+    if (!node.children) return
+    for (const child of node.children) {
+      if (child.type === 'html' && typeof child.value === 'string' && /^<br\s*\/?>$/i.test(child.value.trim())) {
+        child.type = 'break'
+        delete child.value
+      } else walk(child)
+    }
+  }
+  return (tree: MdNode) => walk(tree)
+}
+
+// ── Extraits de la recherche ─────────────────────────────────────────────────
+
+/** Marqueurs des mots trouvés dans un extrait (backend : services/search.ts). */
+const HIT_START = '\u0002'
+const HIT_END = '\u0003'
+
+/**
+ * Découpe un extrait en morceaux de texte, trouvés ou non. L'extrait est du texte : rien n'y est interprété, et un
+ * marqueur isolé (extrait coupé) est retiré plutôt qu'affiché.
+ */
+export function hitParts(snippet: string): { text: string; hit: boolean }[] {
+  const parts: { text: string; hit: boolean }[] = []
+  const clean = (text: string) => text.replaceAll(HIT_START, '').replaceAll(HIT_END, '')
+  const push = (text: string, hit: boolean) => {
+    const value = clean(text)
+    if (value) parts.push({ text: value, hit })
+  }
+  let last = 0
+  for (const m of snippet.matchAll(/\u0002([^\u0002\u0003]*)\u0003/g)) {
+    push(snippet.slice(last, m.index), false)
+    push(m[1]!, true)
+    last = m.index + m[0].length
+  }
+  push(snippet.slice(last), false)
+  return parts
 }
